@@ -6,74 +6,57 @@ metadata: { "openclaw": { "emoji": "🔍" } }
 
 # ggzy-search Skill
 
-全国公共资源交易平台公告搜索与报告生成技能。
+搜索全国公共资源交易平台（https://www.ggzy.gov.cn/deal/dealList.html）上的交易公告，支持单个或多个关键词，自动翻页抓取并生成按关键词分组的 HTML 报告。
 
-## 用途
+## 🚨 执行纪律（最高优先级，必须遵守）
 
-搜索全国公共资源交易平台（https://www.ggzy.gov.cn/deal/dealList.html）上的交易公告，支持自定义关键词，自动翻页抓取全部结果，并生成 HTML 报告。
+1. **禁止中途暂停询问用户**。一旦开始搜索循环，必须按顺序跑完所有关键词，中途不得停下来问用户"要不要继续""要不要换方案"。
+2. **禁止尝试 Skill 未定义的替代方案**。不允许尝试 URL 参数、API 调用、web_fetch 或任何本文档未列出的方法。只用本文档定义的 `browser evaluate` 方式。
+3. **禁止自行优化或跳步**。即使认为某步骤"可能不需要"，也必须完整执行。每个关键词都走完 Step 3→4→5→6 全流程。
+4. **必须输出进度日志**。每完成一个关键词，立即输出一行进度（不需要等用户回复），格式：`[N/总数] 关键词: XX条 ✓` 或 `[N/总数] 关键词: 0条（无结果）✓`
+5. **空结果只记录不处理**。循环中遇到 0 条结果，记入 emptyKeywords 后立即进入下一个关键词。主体词分析和用户确认放在全部跑完之后。
+6. **必须生成 HTML 报告**。Step 8 不可跳过，无论有多少关键词都必须生成一份报告文件。
 
-## 默认筛选条件
+## 参数与约束
 
-- **发布时间**：近十天
-- **省份**：广东
-- **信息类型**：交易公告
+**默认筛选**：近十天 / 广东 / 交易公告
 
-## 可变参数
+**可变参数**：
+- 关键词（必填，一个或多个）：自然语言"医疗和足球" → `["医疗","足球"]`；列举式"医疗、足球" → `["医疗","足球"]`
+- 省份（可选，默认"广东"）
+- 翻页数（可选，默认全部页）
 
-- **关键词**：一个或多个，用户指定。支持两种输入方式：
-  - 自然语言："帮我搜索医疗和足球的招标公告"
-  - 列举式："搜索以下关键词：医疗、足球、教育"
-- **省份**：可选覆盖，默认"广东"
-- **翻页数**：可选，默认全部页（对每个关键词生效）
+**技术约束**：
+- 网站不支持 URL 查询参数，所有筛选条件必须通过 `browser evaluate` 操作 DOM
+- 禁止 `browser act kind:fill` 和 `browser act kind:type`，必须用 evaluate 注入文本
+- 每次导航/AJAX 后 aria ref 失效，交互前必须重新 snapshot
+- 筛选链接点击后触发 AJAX，必须 sleep 2-3 秒等待加载
+- 多关键词必须逐个搜索，每个关键词需要独立执行完整流程
 
-## ⚠️ 关键约束
-
-1. **此网站不支持 URL 查询参数**——所有筛选条件必须通过页面 DOM 交互设置。禁止在 URL 上拼接 `keyword`、`province`、`timeRange` 等参数，拼了也不会生效。
-2. 全局规则禁止 `browser act kind:fill` 和 `browser act kind:type`。**必须用 `browser evaluate` 执行 JavaScript 来注入文本和操作下拉框**。
-3. 每次导航或 AJAX 请求后，aria ref 编号会失效。**每次交互前必须重新 `browser snapshot`** 获取最新 ref。
-4. 筛选链接（近十天、交易公告等）是 `<a href="javascript:;">`，点击后会触发 AJAX 异步加载，**点击后必须 sleep 2-3 秒** 等待数据刷新。
-5. **多关键词必须逐个搜索**——此网站搜索框只支持单关键词，不能一次搜多个。每个关键词需要独立执行一轮完整的搜索流程（导航 → 设置筛选 → 搜索 → 翻页抓取）。
+---
 
 ## 操作流程
 
 ### Step 1：解析关键词列表
 
-从用户输入中提取关键词，构建一个**关键词列表**。
+从用户输入提取关键词数组。"和""与""以及"、顿号、逗号为分隔符。区分多关键词（"医疗和足球"→2 个）和组合关键词（"医疗设备"→1 个）。
 
-解析规则：
-- 自然语言中的"和""与""以及"是分隔符："医疗和足球" → `["医疗", "足球"]`
-- 中文顿号、逗号是分隔符："医疗、足球、教育" → `["医疗", "足球", "教育"]`
-- 单个关键词："医疗设备" → `["医疗设备"]`
-- 注意区分**多关键词**和**多词组合关键词**：
-  - "医疗和足球" = 两个独立关键词 → `["医疗", "足球"]`
-  - "医疗设备" = 一个组合关键词 → `["医疗设备"]`
-  - "新冠医疗和足球场地" = 两个组合关键词 → `["新冠医疗", "足球场地"]`
+初始化：`results = {}`, `emptyKeywords = []`
 
-初始化结果收集器：
-- `results = {}`（关键词 → 搜索结果数组的映射）
-- `emptyKeywords = []`（搜索记录数为 0 的关键词列表）
-
-### Step 2：打开网站（不带任何参数）
+### Step 2：打开网站
 
 ```
 browser navigate url:"https://www.ggzy.gov.cn/deal/dealList.html"
-```
-
-等待 3 秒让页面完全加载：
-
-```
 browser act kind:wait duration:3000
 ```
 
 ---
 
-### 🔁 Step 3 ~ Step 6：对每个关键词循环执行
+### 🔁 Step 3~6：对每个关键词循环执行
 
-**对关键词列表中的每个关键词 `<当前关键词>`**，依次执行以下步骤：
+### Step 3：设置筛选 + 关键词 + 搜索
 
-### Step 3：设置筛选条件 + 当前关键词 + 触发搜索
-
-用一个 `browser evaluate` 调用完成所有设置并触发搜索。将 `<当前关键词>` 替换为当前循环的关键词，将 `<省份>` 替换为目标省份（默认"广东"）：
+将 `<当前关键词>` 和 `<省份>` 替换后执行：
 
 ```javascript
 browser evaluate expression:"(function() {
@@ -84,7 +67,6 @@ browser evaluate expression:"(function() {
         || pcl.indexOf('active') >= 0 || pcl.indexOf('selected') >= 0 || pcl.indexOf('on') >= 0;
   }
 
-  // 1) 点击「近十天」—— 仅当未选中时才点击，避免 toggle 取消
   var links = document.querySelectorAll('.search_tiaojian a');
   for (var i = 0; i < links.length; i++) {
     if (links[i].textContent.trim() === '近十天') {
@@ -93,7 +75,6 @@ browser evaluate expression:"(function() {
     }
   }
 
-  // 2) 选择省份
   var selects = document.querySelectorAll('select');
   for (var j = 0; j < selects.length; j++) {
     var opts = selects[j].options;
@@ -106,7 +87,6 @@ browser evaluate expression:"(function() {
     }
   }
 
-  // 3) 点击「交易公告」—— 仅当未选中时才点击
   for (var m = 0; m < links.length; m++) {
     if (links[m].textContent.trim() === '交易公告') {
       if (!isActive(links[m])) links[m].click();
@@ -114,7 +94,6 @@ browser evaluate expression:"(function() {
     }
   }
 
-  // 4) 输入关键词（先清空再填入，防止残留前一个关键词）
   var input = document.querySelector('input[placeholder*=\"关键字\"]');
   if (!input) input = document.querySelector('.search_key input');
   if (input) {
@@ -126,7 +105,6 @@ browser evaluate expression:"(function() {
     input.dispatchEvent(new Event('change', {bubbles: true}));
   }
 
-  // 5) 点击搜索按钮
   var btns = document.querySelectorAll('button, input[type=button], a');
   for (var n = 0; n < btns.length; n++) {
     if (btns[n].textContent.trim() === '搜索') {
@@ -140,94 +118,48 @@ browser evaluate expression:"(function() {
 })()"
 ```
 
-执行后等待 3 秒让搜索结果加载：
+等待 3 秒：`browser act kind:wait duration:3000`
 
-```
-browser act kind:wait duration:3000
-```
+### Step 4：验证筛选条件（不一致则重试 Step 3，最多 2 次）
 
-### Step 4：验证筛选条件是否生效（最多重试 2 次）
-
-先截图做视觉确认：
-
-```
-browser screenshot
-```
-
-再用 evaluate 程序化验证当前筛选状态：
+`browser screenshot` 截图，然后执行验证脚本：
 
 ```javascript
 browser evaluate expression:"(function() {
-  var result = {};
-
-  var timeLinks = document.querySelectorAll('.search_tiaojian a');
-  for (var i = 0; i < timeLinks.length; i++) {
-    var cl = timeLinks[i].className || '';
-    var parent = timeLinks[i].parentElement ? timeLinks[i].parentElement.className : '';
-    if (cl.indexOf('active') >= 0 || cl.indexOf('selected') >= 0 || cl.indexOf('on') >= 0
-        || parent.indexOf('active') >= 0 || parent.indexOf('selected') >= 0 || parent.indexOf('on') >= 0) {
-      result.timeRange = timeLinks[i].textContent.trim();
-    }
+  var r = {};
+  var links = document.querySelectorAll('.search_tiaojian a');
+  for (var i = 0; i < links.length; i++) {
+    var cl = (links[i].className || '') + ' ' + (links[i].parentElement ? links[i].parentElement.className : '');
+    if (cl.indexOf('active') >= 0 || cl.indexOf('selected') >= 0 || cl.indexOf('on') >= 0)
+      r.timeRange = links[i].textContent.trim();
   }
-
   var selects = document.querySelectorAll('select');
   for (var j = 0; j < selects.length; j++) {
-    if (selects[j].selectedIndex > 0) {
-      result.province = selects[j].options[selects[j].selectedIndex].text;
-      break;
-    }
+    if (selects[j].selectedIndex > 0) { r.province = selects[j].options[selects[j].selectedIndex].text; break; }
   }
-  if (!result.province) result.province = '不限';
-
-  var infoLinks = document.querySelectorAll('.search_tiaojian a');
-  for (var k = 0; k < infoLinks.length; k++) {
-    var t = infoLinks[k].textContent.trim();
-    if ((t === '交易公告' || t === '成交公示' || t === '不限') &&
-        (infoLinks[k].className.indexOf('active') >= 0 ||
-         (infoLinks[k].parentElement && infoLinks[k].parentElement.className.indexOf('active') >= 0))) {
-      result.infoType = t;
-    }
+  if (!r.province) r.province = '不限';
+  for (var k = 0; k < links.length; k++) {
+    var t = links[k].textContent.trim();
+    var kcl = (links[k].className || '') + ' ' + (links[k].parentElement ? links[k].parentElement.className : '');
+    if ((t === '交易公告' || t === '成交公示') && (kcl.indexOf('active') >= 0 || kcl.indexOf('selected') >= 0))
+      r.infoType = t;
   }
-
   var input = document.querySelector('input[placeholder*=\"关键字\"]');
-  result.keyword = input ? input.value : '';
-
-  return JSON.stringify(result);
+  r.keyword = input ? input.value : '';
+  return JSON.stringify(r);
 })()"
 ```
 
-**验证规则**：
-- `timeRange` 应为"近十天"
-- `province` 应为目标省份（如"广东"）
-- `infoType` 应为"交易公告"
-- `keyword` 应为当前关键词
+验证：`timeRange`=近十天, `province`=目标省份, `infoType`=交易公告, `keyword`=当前关键词。不一致则重试 Step 3，最多 2 次。3 次仍失败则继续执行。
 
-**如果任何条件不一致**，重新执行 Step 3，最多重试 **2 次**。3 次仍不一致则截图告知用户，继续用当前状态搜索。
+### Step 5：抓取数据
 
-### Step 5：抓取数据 + 检查结果数
+`browser snapshot refs:"aria"` 提取搜索记录总数、每条公告详情、分页信息。`browser screenshot` 截图。
 
-```
-browser snapshot refs:"aria"
-```
-
-从 snapshot 中提取：
-- 搜索记录总数（形如"搜索记录数:XXX"）
-- 每条公告的：标题、日期、省份、来源平台、业务类型、信息类型、详情链接
-- 分页信息（形如"页码X/Y"）
-
-截图保存：
-
-```
-browser screenshot
-```
-
-**如果搜索记录数为 0**：将当前关键词加入 `emptyKeywords` 列表，**跳过 Step 6，直接进入下一个关键词**。
-
-**如果搜索记录数 > 0**：将提取的数据存入 `results[<当前关键词>]`，继续 Step 6。
+- 记录数为 0 → 加入 `emptyKeywords`，**跳过 Step 6，直接进入下一个关键词**
+- 记录数 > 0 → 存入 `results[<当前关键词>]`，继续 Step 6
 
 ### Step 6：翻页抓取
-
-对每一页执行以下循环：
 
 ```javascript
 browser evaluate expression:"(function() {
@@ -248,154 +180,74 @@ browser evaluate expression:"(function() {
 })()"
 ```
 
-等待 3 秒 → `browser screenshot` → `browser snapshot` 抓取数据，追加到 `results[<当前关键词>]`。
+等待 3 秒 → screenshot → snapshot 抓取数据。重复直到达到用户指定页数或无更多页。
 
-重复直到达到用户指定的页数或没有更多页。
+### 🔁 切换关键词（强制重置页面）
 
-### 🔁 切换到下一个关键词（关键：必须强制重置页面状态）
-
-当前关键词的搜索完成后，如果还有下一个关键词，**必须彻底重置页面状态**。这是多关键词搜索稳定性的关键步骤。
-
-#### 1) 强制硬刷新页面
-
-**禁止**直接 `navigate` 到相同 URL（浏览器会缓存前一次的 JavaScript 状态）。必须用以下方式之一强制硬刷新：
-
-方式 A（推荐）：用 evaluate 执行硬刷新
+**禁止**直接 navigate 到相同 URL。必须强制硬刷新：
 
 ```javascript
 browser evaluate expression:"location.href = 'https://www.ggzy.gov.cn/deal/dealList.html?_t=' + Date.now();"
 ```
 
-方式 B（备选）：navigate 到空白页再导航回来
+等待 **5 秒**：`browser act kind:wait duration:5000`
 
-```
-browser navigate url:"about:blank"
-browser act kind:wait duration:1000
-browser navigate url:"https://www.ggzy.gov.cn/deal/dealList.html"
-```
-
-刷新后等待 **5 秒**（比首次加载多等 2 秒，因为多次请求后服务器响应可能变慢）：
-
-```
-browser act kind:wait duration:5000
-```
-
-#### 2) 验证页面已重置到默认状态
+验证页面已重置：
 
 ```javascript
 browser evaluate expression:"(function() {
   var input = document.querySelector('input[placeholder*=\"关键字\"]');
   var keyword = input ? input.value : '';
-
   var selects = document.querySelectorAll('select');
   var province = '不限';
   for (var j = 0; j < selects.length; j++) {
-    if (selects[j].selectedIndex > 0) {
-      province = selects[j].options[selects[j].selectedIndex].text;
-      break;
-    }
+    if (selects[j].selectedIndex > 0) { province = selects[j].options[selects[j].selectedIndex].text; break; }
   }
-
-  var searchCount = '';
-  var countEl = document.querySelector('[class*=count], [class*=total]');
-  if (countEl) searchCount = countEl.textContent;
-
-  return JSON.stringify({
-    keyword: keyword,
-    province: province,
-    pageReady: !!document.querySelector('.search_tiaojian'),
-    inputEmpty: keyword === ''
-  });
+  return JSON.stringify({ inputEmpty: keyword === '', province: province, pageReady: !!document.querySelector('.search_tiaojian') });
 })()"
 ```
 
-**验证规则**：
-- `inputEmpty` 应为 `true`（搜索框已清空）
-- `province` 应为"不限"（省份已重置）
-- `pageReady` 应为 `true`（筛选区域已加载）
-
-**如果页面未重置干净**（比如 `inputEmpty` 为 `false`），用 evaluate 强制清空：
+如果 `inputEmpty` 为 `false`，强制清空：
 
 ```javascript
 browser evaluate expression:"(function() {
   var input = document.querySelector('input[placeholder*=\"关键字\"]');
-  if (input) {
-    var setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
-    setter.call(input, '');
-    input.dispatchEvent(new Event('input', {bubbles: true}));
-  }
+  if (input) { var s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype,'value').set; s.call(input,''); input.dispatchEvent(new Event('input',{bubbles:true})); }
   var selects = document.querySelectorAll('select');
-  for (var j = 0; j < selects.length; j++) {
-    selects[j].selectedIndex = 0;
-    selects[j].dispatchEvent(new Event('change', {bubbles: true}));
-  }
+  for (var j = 0; j < selects.length; j++) { selects[j].selectedIndex = 0; selects[j].dispatchEvent(new Event('change',{bubbles:true})); }
   return 'ok: forced reset';
 })()"
 ```
 
-等待 2 秒后再进入 **Step 3**。
+等待 2 秒后回到 Step 3。
 
-#### 3) 继续下一个关键词
-
-页面状态确认干净后，回到 **Step 3** 用下一个关键词继续。
+**输出进度日志**：`[N/总数] 关键词: XX条 ✓`
 
 ---
 
 ### Step 7：空结果批量处理
 
-所有关键词搜索完成后，检查 `emptyKeywords` 列表。**如果为空**（所有关键词都有结果），跳过此步直接到 Step 8。
+所有关键词跑完后，如果 `emptyKeywords` 为空则直接到 Step 8。
 
-**如果 `emptyKeywords` 不为空**，执行以下流程：
+如果有无结果的关键词，一次性向用户汇报：
+- 多词组合：识别主体词（核心名词），建议重搜。如"新冠医疗"→主体词"新冠"
+- 单个词：标记"无法拆分"
 
-#### 1) 对每个无结果的关键词识别主体词
+汇报格式：
 
-对 `emptyKeywords` 中的每个关键词进行语义分析：
-- 如果是单个词（如"医疗"），标记为"单词，无法拆分"
-- 如果是多词组合（如"新冠医疗"），识别出主体词
-
-识别原则：
-- 主体词是用户搜索意图的核心对象
-- 修饰词是对核心对象的补充说明或领域限定
-- 示例：
-  - "新冠医疗" → 主体词"新冠"
-  - "足球场地建设" → 主体词"足球"
-  - "污水处理设备" → 主体词"污水处理"
-  - "校园安防监控" → 主体词"安防监控"
-
-#### 2) 一次性向用户汇报并确认
-
-向用户发送一条汇总消息，格式如下：
-
-> 以下关键词在<省份>近十天的交易公告中无结果：
+> 以下关键词无结果：
+> 1. 「新冠医疗」— 建议用「新冠」重搜
+> 2. 「足球」— 单个词，无法拆分
 >
-> 1. 「新冠医疗」— 建议用主体词「新冠」重新搜索
-> 2. 「足球场地」— 建议用主体词「足球」重新搜索
-> 3. 「量子计算」— 单个词，无法进一步拆分
->
-> 请告诉我：
-> - 哪些需要用建议的主体词重新搜索？
-> - 哪些需要换一个关键词？
-> - 哪些直接跳过？
+> 哪些需要重搜？哪些跳过？
 
-**必须等待用户回复，禁止自动执行。**
+等待用户回复后，对需要重搜的关键词执行 Step 2~6。补搜仍无结果则再次询问用户。
 
-#### 3) 根据用户回复补搜
+### Step 8：生成 HTML 报告（不可跳过）
 
-对用户确认需要重搜的关键词，逐个执行 Step 2 ~ Step 6 的完整流程。补搜后仍无结果的关键词，**再次询问用户**是否要换词继续或放弃。
+文件名：`ggzy_report_<YYYYMMDD>_<HHmmss>.html`
 
-### Step 8：生成 HTML 报告（按关键词分组）
-
-**必须执行此步骤**，不能跳过。用 `exec` 或文件写入工具将以下 HTML 模板填充数据后保存为文件。
-
-#### 文件命名与路径
-
-文件名格式：`ggzy_report_<YYYYMMDD>_<HHmmss>.html`
-
-保存到当前工作目录或用户指定的目录。
-
-#### HTML 模板
-
-用收集到的数据填充以下模板中的占位符，然后写入文件：
+用 `exec` 或 `write_file` 写入以下模板（用实际数据替换 `{{占位符}}`，`{{#循环}}...{{/循环}}` 对每项重复）：
 
 ```html
 <!DOCTYPE html>
@@ -424,161 +276,61 @@ browser evaluate expression:"(function() {
 </style>
 </head>
 <body>
-
 <h1>公共资源交易公告搜索报告</h1>
-
 <div class="summary">
   <p><strong>生成时间：</strong>{{生成时间}}</p>
-  <p><strong>搜索条件：</strong>省份 = {{省份}}，发布时间 = 近十天，信息类型 = 交易公告</p>
+  <p><strong>搜索条件：</strong>省份={{省份}}，发布时间=近十天，信息类型=交易公告</p>
   <p><strong>关键词：</strong>{{#每个关键词}}<span class="keyword-tag">{{关键词}} ({{记录数}}条)</span>{{/每个关键词}}</p>
   <p><strong>总记录数：</strong>{{总记录数}} 条</p>
 </div>
-
 {{#每个有结果的关键词}}
 <h2>「{{关键词}}」— {{记录数}} 条结果</h2>
-
 <table>
-  <thead>
-    <tr>
-      <th>序号</th>
-      <th>标题</th>
-      <th>日期</th>
-      <th>省份</th>
-      <th>业务类型</th>
-      <th>信息类型</th>
-    </tr>
-  </thead>
+  <thead><tr><th>序号</th><th>标题</th><th>日期</th><th>省份</th><th>业务类型</th><th>信息类型</th></tr></thead>
   <tbody>
-    {{#每条公告}}
-    <tr>
-      <td>{{序号}}</td>
-      <td><a href="{{链接}}" target="_blank">{{标题}}</a></td>
-      <td>{{日期}}</td>
-      <td>{{省份}}</td>
-      <td>{{业务类型}}</td>
-      <td>{{信息类型}}</td>
-    </tr>
-    {{/每条公告}}
+    {{#每条公告}}<tr><td>{{序号}}</td><td><a href="{{链接}}" target="_blank">{{标题}}</a></td><td>{{日期}}</td><td>{{省份}}</td><td>{{业务类型}}</td><td>{{信息类型}}</td></tr>{{/每条公告}}
   </tbody>
 </table>
-
-{{#如果有截图}}
-<p><strong>搜索结果截图：</strong></p>
-{{#每张截图}}
-<img class="screenshot" src="{{截图路径}}" alt="第{{页码}}页截图">
-{{/每张截图}}
-{{/如果有截图}}
+{{#如果有截图}}{{#每张截图}}<img class="screenshot" src="{{截图路径}}" alt="第{{页码}}页截图">{{/每张截图}}{{/如果有截图}}
 {{/每个有结果的关键词}}
-
 {{#如果有无结果的关键词}}
 <h2>无结果的关键词</h2>
-<div class="no-result">
-  <p>以下关键词在搜索条件范围内无匹配结果：</p>
-  <ul>
-    {{#每个无结果的关键词}}
-    <li><span class="keyword-tag empty-tag">{{关键词}}</span></li>
-    {{/每个无结果的关键词}}
-  </ul>
-</div>
+<div class="no-result"><ul>{{#每个无结果关键词}}<li><span class="keyword-tag empty-tag">{{关键词}}</span></li>{{/每个无结果关键词}}</ul></div>
 {{/如果有无结果的关键词}}
-
 <div class="footer">
-  <p>数据来源：<a href="https://www.ggzy.gov.cn" target="_blank">全国公共资源交易平台</a></p>
-  <p>本报告由 OpenClaw ggzy-search Skill 自动生成</p>
+  <p>数据来源：<a href="https://www.ggzy.gov.cn" target="_blank">全国公共资源交易平台</a> | 由 OpenClaw ggzy-search Skill 自动生成</p>
 </div>
-
 </body>
 </html>
 ```
 
-#### 填充说明
-
-- `{{...}}` 是占位符，用实际数据替换
-- `{{#...}}...{{/...}}` 是循环块，对每个数据项重复生成 HTML
-- 截图路径使用 `browser screenshot` 返回的媒体路径
-- 日期格式保持网站原始格式（如 2026-03-16）
-- 链接使用完整的 URL（如 `https://www.ggzy.gov.cn/information/deal/...`）
-
-#### 写入文件
-
-用 `exec` 工具将填充完成的 HTML 内容写入文件：
-
-```
-exec command:"cat > ggzy_report_<日期>_<时间>.html << 'HTMLEOF'\n<填充后的完整HTML>\nHTMLEOF"
-```
-
-或者使用 `write_file` 工具（如果可用）直接写入。
-
-写入后向用户报告文件路径。
-
-## 输出
-
-- **必须输出**：搜索结果的 HTML 报告文件路径（一份报告包含所有关键词的结果）
-- **必须输出**：每页截图的媒体路径列表
-- 向用户明确展示报告文件的保存位置
+写入后向用户报告文件路径和每页截图路径。
 
 ## 故障排除
 
-| 现象 | 原因 | 处理 |
-|------|------|------|
-| 搜索结果显示全国数据，未按省份过滤 | evaluate 中省份选择未生效 | 重新 snapshot 确认 select 元素，检查 option text 是否精确匹配 |
-| 点击"近十天"后结果未变化 | AJAX 未完成就截图了 | 增加等待时间到 5 秒 |
-| ref 点击超时 | 页面交互后旧 ref 失效 | 重新 snapshot 获取最新 ref |
-| 搜索按钮找不到 | DOM 结构可能有变化 | 用 snapshot 检查按钮实际标签和 class |
-| 翻页无反应 | 页码链接定位不准 | 先 snapshot 找到分页区域的准确 ref，用 click ref |
-| 搜索记录数为 0（单关键词） | 关键词组合过于具体或该领域近期无公告 | 进入 Step 7 主体词识别流程，与用户确认后重搜 |
-| 搜索记录数为 0（多关键词中部分为空） | 部分关键词无匹配 | 先跑完全部关键词，在 Step 7 批量汇报无结果的词 |
-| 筛选条件验证失败（Step 4 不一致） | evaluate 设置未生效，DOM 结构可能变化 | 重试 Step 3（最多 2 次），仍失败则截图告知用户 |
-| 多关键词搜索时页面状态残留 | 浏览器缓存了前一次的 JS 状态 | 用 `location.href` 加时间戳强制硬刷新，不要直接 navigate 到相同 URL |
-| 后续关键词的筛选条件没选上 | "近十天"/"交易公告"已选中时再 click 会 toggle 取消 | Step 3 的 evaluate 中已用 `isActive()` 检查，仅未选中时才 click |
-| 搜索框残留上一个关键词 | navigate 后页面从缓存加载，输入框未清空 | Step 3 的 evaluate 中先清空再填入新关键词；切换关键词时有 reset 验证 |
+| 现象 | 处理 |
+|------|------|
+| 筛选条件未生效 | 重试 Step 3（最多 2 次） |
+| 后续关键词条件没选上 | isActive() 防 toggle + 先清空再填入 + 硬刷新 |
+| 页面状态残留 | 切换时用 `location.href + Date.now()` 硬刷新 |
+| 搜索记录数 0 | 记入 emptyKeywords，全部跑完后 Step 7 批量处理 |
+| 翻页无反应 | snapshot 获取最新 ref 后 click |
 
-## 示例调用
+## 示例
 
-### 示例 1：单关键词搜索（有结果）
+用户："搜索以下关键词的广东招标公告：医疗、新冠疫苗、足球"
 
-用户请求："帮我搜索广东近十天关于医疗设备的招标公告"
-
-执行步骤：
-1. 解析关键词列表：`["医疗设备"]`
-2. `browser navigate` 打开基础 URL
-3. `browser evaluate` 设置：近十天 + 广东 + 交易公告 + 关键词"医疗设备" + 搜索
-4. 验证筛选条件
-5. 抓取数据 + 翻页
-6. 生成 HTML 报告
-
-### 示例 2：多关键词搜索（全部有结果）
-
-用户请求："帮我搜索广东近十天关于医疗和足球的招标公告"
-
-执行步骤：
-1. 解析关键词列表：`["医疗", "足球"]`
-2. `browser navigate` 打开基础 URL
-3. 搜索"医疗" → 验证 → 抓取数据 + 翻页
-4. 重新 `browser navigate` 到基础 URL
-5. 搜索"足球" → 验证 → 抓取数据 + 翻页
-6. 生成一份 HTML 报告，按"医疗"和"足球"分组展示
-
-### 示例 3：多关键词搜索（部分无结果）
-
-用户请求："搜索以下关键词的广东招标公告：医疗、新冠疫苗、足球"
-
-执行步骤：
-1. 解析关键词列表：`["医疗", "新冠疫苗", "足球"]`
-2. 搜索"医疗" → 有结果 → 抓取
-3. 搜索"新冠疫苗" → 搜索记录数为 0 → 加入 emptyKeywords
-4. 搜索"足球" → 有结果 → 抓取
-5. 批量汇报：「以下关键词无结果：'新冠疫苗'——建议用主体词'新冠'重搜。是否重搜？」
-6. 用户确认 → 用"新冠"补搜
-7. 生成报告：医疗（XX条）、新冠（XX条）、足球（XX条）
-
-### 示例 4：单关键词无结果 → 主体词识别
-
-用户请求："帮我搜索广东近十天关于新冠医疗的招标公告"
-
-执行步骤：
-1. 解析关键词列表：`["新冠医疗"]`
-2. 搜索"新冠医疗" → 记录数为 0
-3. 汇报：「'新冠医疗'无结果，核心主体词为'新冠'，是否用'新冠'重新搜索？」
-4. 用户确认 → 用"新冠"重搜
-5. 有结果 → 正常抓取 + 生成报告
+```
+Step 1: 解析 → ["医疗", "新冠疫苗", "足球"]
+Step 2: navigate 打开网站
+Step 3~6: 搜索"医疗" → 验证 → 抓取 → 翻页
+  [1/3] 医疗: 45条 ✓
+🔁 硬刷新 → 重置验证
+Step 3~6: 搜索"新冠疫苗" → 验证 → 0条 → 跳过翻页
+  [2/3] 新冠疫苗: 0条（无结果）✓
+🔁 硬刷新 → 重置验证
+Step 3~6: 搜索"足球" → 验证 → 抓取 → 翻页
+  [3/3] 足球: 8条 ✓
+Step 7: 汇报「新冠疫苗」无结果，建议用「新冠」重搜 → 用户确认 → 补搜
+Step 8: 生成 ggzy_report_20260316_210000.html
+```
