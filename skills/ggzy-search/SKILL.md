@@ -77,11 +77,18 @@ browser act kind:wait duration:3000
 
 ```javascript
 browser evaluate expression:"(function() {
-  // 1) 点击「近十天」
+  function isActive(el) {
+    var cl = el.className || '';
+    var pcl = el.parentElement ? el.parentElement.className : '';
+    return cl.indexOf('active') >= 0 || cl.indexOf('selected') >= 0 || cl.indexOf('on') >= 0
+        || pcl.indexOf('active') >= 0 || pcl.indexOf('selected') >= 0 || pcl.indexOf('on') >= 0;
+  }
+
+  // 1) 点击「近十天」—— 仅当未选中时才点击，避免 toggle 取消
   var links = document.querySelectorAll('.search_tiaojian a');
   for (var i = 0; i < links.length; i++) {
     if (links[i].textContent.trim() === '近十天') {
-      links[i].click();
+      if (!isActive(links[i])) links[i].click();
       break;
     }
   }
@@ -99,19 +106,21 @@ browser evaluate expression:"(function() {
     }
   }
 
-  // 3) 点击「交易公告」
+  // 3) 点击「交易公告」—— 仅当未选中时才点击
   for (var m = 0; m < links.length; m++) {
     if (links[m].textContent.trim() === '交易公告') {
-      links[m].click();
+      if (!isActive(links[m])) links[m].click();
       break;
     }
   }
 
-  // 4) 输入关键词
+  // 4) 输入关键词（先清空再填入，防止残留前一个关键词）
   var input = document.querySelector('input[placeholder*=\"关键字\"]');
   if (!input) input = document.querySelector('.search_key input');
   if (input) {
     var nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+    nativeInputValueSetter.call(input, '');
+    input.dispatchEvent(new Event('input', {bubbles: true}));
     nativeInputValueSetter.call(input, '<当前关键词>');
     input.dispatchEvent(new Event('input', {bubbles: true}));
     input.dispatchEvent(new Event('change', {bubbles: true}));
@@ -125,7 +134,6 @@ browser evaluate expression:"(function() {
       return 'ok: filters set, search triggered';
     }
   }
-  // 备选：直接调用 onclick
   var searchBtn = document.querySelector('.search_btn') || document.querySelector('[onclick*=search]');
   if (searchBtn) { searchBtn.click(); return 'ok: fallback search clicked'; }
   return 'error: search button not found';
@@ -244,16 +252,92 @@ browser evaluate expression:"(function() {
 
 重复直到达到用户指定的页数或没有更多页。
 
-### 🔁 切换到下一个关键词
+### 🔁 切换到下一个关键词（关键：必须强制重置页面状态）
 
-当前关键词的搜索完成后，如果还有下一个关键词，**重新导航到基础 URL**：
+当前关键词的搜索完成后，如果还有下一个关键词，**必须彻底重置页面状态**。这是多关键词搜索稳定性的关键步骤。
+
+#### 1) 强制硬刷新页面
+
+**禁止**直接 `navigate` 到相同 URL（浏览器会缓存前一次的 JavaScript 状态）。必须用以下方式之一强制硬刷新：
+
+方式 A（推荐）：用 evaluate 执行硬刷新
+
+```javascript
+browser evaluate expression:"location.href = 'https://www.ggzy.gov.cn/deal/dealList.html?_t=' + Date.now();"
+```
+
+方式 B（备选）：navigate 到空白页再导航回来
 
 ```
+browser navigate url:"about:blank"
+browser act kind:wait duration:1000
 browser navigate url:"https://www.ggzy.gov.cn/deal/dealList.html"
-browser act kind:wait duration:3000
 ```
 
-然后回到 **Step 3** 用下一个关键词继续。
+刷新后等待 **5 秒**（比首次加载多等 2 秒，因为多次请求后服务器响应可能变慢）：
+
+```
+browser act kind:wait duration:5000
+```
+
+#### 2) 验证页面已重置到默认状态
+
+```javascript
+browser evaluate expression:"(function() {
+  var input = document.querySelector('input[placeholder*=\"关键字\"]');
+  var keyword = input ? input.value : '';
+
+  var selects = document.querySelectorAll('select');
+  var province = '不限';
+  for (var j = 0; j < selects.length; j++) {
+    if (selects[j].selectedIndex > 0) {
+      province = selects[j].options[selects[j].selectedIndex].text;
+      break;
+    }
+  }
+
+  var searchCount = '';
+  var countEl = document.querySelector('[class*=count], [class*=total]');
+  if (countEl) searchCount = countEl.textContent;
+
+  return JSON.stringify({
+    keyword: keyword,
+    province: province,
+    pageReady: !!document.querySelector('.search_tiaojian'),
+    inputEmpty: keyword === ''
+  });
+})()"
+```
+
+**验证规则**：
+- `inputEmpty` 应为 `true`（搜索框已清空）
+- `province` 应为"不限"（省份已重置）
+- `pageReady` 应为 `true`（筛选区域已加载）
+
+**如果页面未重置干净**（比如 `inputEmpty` 为 `false`），用 evaluate 强制清空：
+
+```javascript
+browser evaluate expression:"(function() {
+  var input = document.querySelector('input[placeholder*=\"关键字\"]');
+  if (input) {
+    var setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+    setter.call(input, '');
+    input.dispatchEvent(new Event('input', {bubbles: true}));
+  }
+  var selects = document.querySelectorAll('select');
+  for (var j = 0; j < selects.length; j++) {
+    selects[j].selectedIndex = 0;
+    selects[j].dispatchEvent(new Event('change', {bubbles: true}));
+  }
+  return 'ok: forced reset';
+})()"
+```
+
+等待 2 秒后再进入 **Step 3**。
+
+#### 3) 继续下一个关键词
+
+页面状态确认干净后，回到 **Step 3** 用下一个关键词继续。
 
 ---
 
@@ -333,7 +417,9 @@ browser act kind:wait duration:3000
 | 搜索记录数为 0（单关键词） | 关键词组合过于具体或该领域近期无公告 | 进入 Step 7 主体词识别流程，与用户确认后重搜 |
 | 搜索记录数为 0（多关键词中部分为空） | 部分关键词无匹配 | 先跑完全部关键词，在 Step 7 批量汇报无结果的词 |
 | 筛选条件验证失败（Step 4 不一致） | evaluate 设置未生效，DOM 结构可能变化 | 重试 Step 3（最多 2 次），仍失败则截图告知用户 |
-| 多关键词搜索时页面状态残留 | 上一个关键词的筛选状态未清除 | 每个关键词搜索前重新 navigate 到基础 URL |
+| 多关键词搜索时页面状态残留 | 浏览器缓存了前一次的 JS 状态 | 用 `location.href` 加时间戳强制硬刷新，不要直接 navigate 到相同 URL |
+| 后续关键词的筛选条件没选上 | "近十天"/"交易公告"已选中时再 click 会 toggle 取消 | Step 3 的 evaluate 中已用 `isActive()` 检查，仅未选中时才 click |
+| 搜索框残留上一个关键词 | navigate 后页面从缓存加载，输入框未清空 | Step 3 的 evaluate 中先清空再填入新关键词；切换关键词时有 reset 验证 |
 
 ## 示例调用
 
