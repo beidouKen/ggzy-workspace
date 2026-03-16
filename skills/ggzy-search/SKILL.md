@@ -385,25 +385,137 @@ browser evaluate expression:"(function() {
 
 ### Step 8：生成 HTML 报告（按关键词分组）
 
-将所有收集到的数据整理成**一份** HTML 文档，结构如下：
+**必须执行此步骤**，不能跳过。用 `exec` 或文件写入工具将以下 HTML 模板填充数据后保存为文件。
 
-1. **报告头部**
-   - 搜索条件摘要：省份、时间范围、信息类型
-   - 关键词列表及各自的搜索记录数
-   - 总记录数（所有关键词之和）
+#### 文件命名与路径
 
-2. **按关键词分组的结果**（每个关键词一个独立章节）
-   - 章节标题：关键词名称 + 记录数
-   - 表格：序号、标题（可点击链接）、日期、省份、业务类型、信息类型
-   - 该关键词对应的截图缩略图
+文件名格式：`ggzy_report_<YYYYMMDD>_<HHmmss>.html`
 
-3. **无结果关键词汇总**（如有）
-   - 列出搜索过但无结果的关键词
+保存到当前工作目录或用户指定的目录。
+
+#### HTML 模板
+
+用收集到的数据填充以下模板中的占位符，然后写入文件：
+
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>公共资源交易公告搜索报告</title>
+<style>
+  body { font-family: -apple-system, "Microsoft YaHei", sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; color: #333; }
+  h1 { color: #1a56db; border-bottom: 2px solid #1a56db; padding-bottom: 10px; }
+  h2 { color: #1e40af; margin-top: 40px; border-left: 4px solid #1e40af; padding-left: 12px; }
+  .summary { background: #f0f7ff; border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+  .summary p { margin: 4px 0; }
+  .keyword-tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: 2px 10px; border-radius: 12px; margin: 2px 4px; font-size: 14px; }
+  .empty-tag { background: #fee2e2; color: #991b1b; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+  th { background: #1e40af; color: #fff; padding: 10px 8px; text-align: left; }
+  td { padding: 8px; border-bottom: 1px solid #e5e7eb; }
+  tr:hover td { background: #f9fafb; }
+  a { color: #1a56db; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .screenshot { max-width: 100%; border: 1px solid #e5e7eb; border-radius: 4px; margin: 8px 0; }
+  .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 12px; }
+  .no-result { background: #fef2f2; border-radius: 8px; padding: 12px 16px; color: #991b1b; }
+</style>
+</head>
+<body>
+
+<h1>公共资源交易公告搜索报告</h1>
+
+<div class="summary">
+  <p><strong>生成时间：</strong>{{生成时间}}</p>
+  <p><strong>搜索条件：</strong>省份 = {{省份}}，发布时间 = 近十天，信息类型 = 交易公告</p>
+  <p><strong>关键词：</strong>{{#每个关键词}}<span class="keyword-tag">{{关键词}} ({{记录数}}条)</span>{{/每个关键词}}</p>
+  <p><strong>总记录数：</strong>{{总记录数}} 条</p>
+</div>
+
+{{#每个有结果的关键词}}
+<h2>「{{关键词}}」— {{记录数}} 条结果</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>序号</th>
+      <th>标题</th>
+      <th>日期</th>
+      <th>省份</th>
+      <th>业务类型</th>
+      <th>信息类型</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#每条公告}}
+    <tr>
+      <td>{{序号}}</td>
+      <td><a href="{{链接}}" target="_blank">{{标题}}</a></td>
+      <td>{{日期}}</td>
+      <td>{{省份}}</td>
+      <td>{{业务类型}}</td>
+      <td>{{信息类型}}</td>
+    </tr>
+    {{/每条公告}}
+  </tbody>
+</table>
+
+{{#如果有截图}}
+<p><strong>搜索结果截图：</strong></p>
+{{#每张截图}}
+<img class="screenshot" src="{{截图路径}}" alt="第{{页码}}页截图">
+{{/每张截图}}
+{{/如果有截图}}
+{{/每个有结果的关键词}}
+
+{{#如果有无结果的关键词}}
+<h2>无结果的关键词</h2>
+<div class="no-result">
+  <p>以下关键词在搜索条件范围内无匹配结果：</p>
+  <ul>
+    {{#每个无结果的关键词}}
+    <li><span class="keyword-tag empty-tag">{{关键词}}</span></li>
+    {{/每个无结果的关键词}}
+  </ul>
+</div>
+{{/如果有无结果的关键词}}
+
+<div class="footer">
+  <p>数据来源：<a href="https://www.ggzy.gov.cn" target="_blank">全国公共资源交易平台</a></p>
+  <p>本报告由 OpenClaw ggzy-search Skill 自动生成</p>
+</div>
+
+</body>
+</html>
+```
+
+#### 填充说明
+
+- `{{...}}` 是占位符，用实际数据替换
+- `{{#...}}...{{/...}}` 是循环块，对每个数据项重复生成 HTML
+- 截图路径使用 `browser screenshot` 返回的媒体路径
+- 日期格式保持网站原始格式（如 2026-03-16）
+- 链接使用完整的 URL（如 `https://www.ggzy.gov.cn/information/deal/...`）
+
+#### 写入文件
+
+用 `exec` 工具将填充完成的 HTML 内容写入文件：
+
+```
+exec command:"cat > ggzy_report_<日期>_<时间>.html << 'HTMLEOF'\n<填充后的完整HTML>\nHTMLEOF"
+```
+
+或者使用 `write_file` 工具（如果可用）直接写入。
+
+写入后向用户报告文件路径。
 
 ## 输出
 
-- 搜索结果的 HTML 报告文件路径（一份报告包含所有关键词的结果）
-- 每页截图的媒体路径列表
+- **必须输出**：搜索结果的 HTML 报告文件路径（一份报告包含所有关键词的结果）
+- **必须输出**：每页截图的媒体路径列表
+- 向用户明确展示报告文件的保存位置
 
 ## 故障排除
 
