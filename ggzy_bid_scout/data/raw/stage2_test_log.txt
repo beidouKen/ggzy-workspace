@@ -1,0 +1,67 @@
+[09:36:35] [INFO] ============================================================
+[09:36:35] [INFO] Stage2 Self-Check - Detail Page Extraction
+[09:36:35] [INFO] Start time: 2026-03-17T09:36:35.248150
+[09:36:35] [INFO] ============================================================
+[09:36:35] [INFO] Fetching list data for sample selection...
+[09:36:37] [INFO] Selected 10 samples from 60 total items
+[09:36:37] [INFO] 
+[09:36:37] [INFO] ============================================================
+[09:36:37] [INFO] TEST 1: Detail extraction (10 samples)
+[09:36:37] [INFO] ============================================================
+[09:36:37] [INFO] 
+  [1/10] https://www.ggzy.gov.cn/information/deal/html/a/530000/0101/20260316/005323a4622...
+[09:36:38] [INFO]     title=OK | date=OK | content=OK(3705ch) | issuer=OK | budget=MISS | attachments=1
+[09:36:39] [INFO] 
+  [2/10] https://www.ggzy.gov.cn/information/deal/html/a/370000/0201/20260316/0037b1339cf...
+[09:36:39] [INFO]     title=OK | date=OK | content=OK(1758ch) | issuer=OK | budget=MISS | attachments=1
+[09:36:40] [INFO] 
+  [3/10] https://www.ggzy.gov.cn/information/deal/html/a/310000/9002/20260317/003183a93c4...
+[09:36:40] [INFO]     title=OK | date=OK | content=OK(83ch) | issuer=MISS | budget=MISS | attachments=0
+[09:36:41] [INFO] 
+  [4/10] https://www.ggzy.gov.cn/information/deal/html/a/510000/0202/20260316/0051a0baa26...
+[09:36:41] [INFO]     title=OK | date=OK | content=OK(975ch) | issuer=OK | budget=MISS | attachments=2
+[09:36:42] [INFO] 
+  [5/10] https://www.ggzy.gov.cn/information/deal/html/a/320000/0204/20260316/00328538787...
+[09:36:42] [INFO]     title=OK | date=OK | content=OK(418ch) | issuer=MISS | budget=MISS | attachments=0
+[09:36:43] [INFO] 
+  [6/10] https://www.ggzy.gov.cn/information/deal/html/a/540000/0104/20260316/00543a59c02...
+[09:36:43] [INFO]     title=OK | date=OK | content=OK(1629ch) | issuer=MISS | budget=MISS | attachments=0
+[09:36:44] [INFO] 
+  [7/10] https://www.ggzy.gov.cn/information/deal/html/a/370000/0201/20260316/00370ed14dc...
+[09:36:44] [INFO]     title=OK | date=OK | content=OK(1801ch) | issuer=OK | budget=MISS | attachments=1
+[09:36:45] [INFO] 
+  [8/10] https://www.ggzy.gov.cn/information/deal/html/a/370000/0201/20260316/00371664c93...
+[09:36:46] [INFO]     title=OK | date=OK | content=OK(1770ch) | issuer=OK | budget=MISS | attachments=1
+[09:36:47] [INFO] 
+  [9/10] https://www.ggzy.gov.cn/information/deal/html/a/500000/0104/20260316/00506268fad...
+[09:36:47] [INFO]     title=OK | date=OK | content=OK(643ch) | issuer=MISS | budget=OK | attachments=0
+[09:36:48] [INFO] 
+  [10/10] https://www.ggzy.gov.cn/information/deal/html/a/370000/0202/20260316/0037b5e2b91...
+[09:36:48] [INFO]     title=OK | date=OK | content=OK(3283ch) | issuer=MISS | budget=MISS | attachments=0
+[09:36:48] [INFO] 
+[09:36:48] [INFO] ============================================================
+[09:36:48] [INFO] TEST 2: Field extraction success rates
+[09:36:48] [INFO] ============================================================
+[09:36:48] [INFO]   --- Acceptance criteria (per Stage2 spec) ---
+[09:36:48] [PASS]   [OK] title: 10/10 (100%) [threshold: 100%]
+[09:36:48] [PASS]   [OK] content_text: 10/10 (100%) [threshold: 90%]
+[09:36:48] [PASS]   [OK] attachments quality: 6/6 (100%) [threshold: 80%, pages with attachments: 5/10]
+[09:36:48] [INFO]   --- Supplementary fields (non-blocking) ---
+[09:36:48] [INFO]   [--] publish_date: 10/10 (100%)
+[09:36:48] [INFO]   [--] issuer: 5/10 (50%)
+[09:36:48] [INFO]   [--] agency: 6/10 (60%)
+[09:36:48] [INFO]   [--] budget: 1/10 (10%)
+[09:36:48] [PASS] 
+  [OK] Stage2 acceptance criteria MET
+[09:36:48] [INFO] 
+Test data saved: D:\openclaw\.openclaw\workspace\ggzy_bid_scout\data\raw\stage2_test_result.json
+[09:36:48] [INFO] 
+[09:36:48] [INFO] ============================================================
+[09:36:48] [INFO] TEST SUMMARY
+[09:36:48] [INFO] ============================================================
+[09:36:48] [INFO]   PASS: 4
+[09:36:48] [INFO]   FAIL: 0
+[09:36:48] [INFO]   WARN: 0
+[09:36:48] [INFO]   Elapsed: 13.3s
+[09:36:48] [PASS] 
+>> Stage2 ACCEPTED - ready for Stage3 <<

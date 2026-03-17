@@ -1,0 +1,653 @@
+<!DOCTYPE html><html><head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>全国公共资源交易平台</title>
+  <link type="text/css" href="/assets/css/main.css" rel="stylesheet">
+  <link type="text/css" href="/assets/css/deal.css" rel="stylesheet">
+  <style>
+      .p_tit {
+          color: #FF0000;
+      }
+  </style>
+  <script src="/assets/js/jquery-3.7.1.min.js"></script>
+  <script src="/assets/js/layer/layer.js"></script><link rel="stylesheet" href="https://www.ggzy.gov.cn/assets/js/layer/skin/layer.css" id="layui_layer_skinlayercss" style="">
+  <script src="/assets/js/dealfind.js"></script>
+  <script src="/data/platform.js"></script>
+  <script src="/data/area.js"></script>
+  <script type="text/javascript" src="/assets/js/datecalculator.js"></script>
+  <script type="text/javascript" src="/assets/js/date/WdatePicker.js"></script>
+<script>
+    var mySoureType = '1';
+    var myDealTime = '02';
+    var myDealClassify = '00';
+    var myDealStage = '0000';
+    var myDealTrade = '0';
+    var myProvince = '0';
+    var myCity = '0';
+    var myPlatform = '0';
+    var myFindTxt = '';
+    var provinceJson = eval([{"id":"110000","name":"北京"},{"id":"120000","name":"天津"},{"id":"130000","name":"河北"},{"id":"140000","name":"山西"},{"id":"150000","name":"内蒙古"},{"id":"210000","name":"辽宁"},{"id":"220000","name":"吉林"},{"id":"230000","name":"黑龙江"},{"id":"310000","name":"上海"},{"id":"320000","name":"江苏"},{"id":"330000","name":"浙江"},{"id":"340000","name":"安徽"},{"id":"350000","name":"福建"},{"id":"360000","name":"江西"},{"id":"370000","name":"山东"},{"id":"410000","name":"河南"},{"id":"420000","name":"湖北"},{"id":"430000","name":"湖南"},{"id":"440000","name":"广东"},{"id":"450000","name":"广西"},{"id":"460000","name":"海南"},{"id":"500000","name":"重庆"},{"id":"510000","name":"四川"},{"id":"520000","name":"贵州"},{"id":"530000","name":"云南"},{"id":"540000","name":"西藏"},{"id":"610000","name":"陕西"},{"id":"620000","name":"甘肃"},{"id":"630000","name":"青海"},{"id":"640000","name":"宁夏"},{"id":"650000","name":"新疆"},{"id":"660000","name":"兵团"}]);
+    // var searchJson = eval({"chooseTime":[{"id":"01","time":"当天"},{"id":"02","time":"近三天"},{"id":"03","time":"近十天"},{"id":"04","time":"近一月"},{"id":"05","time":"近三月"},{"id":"06","time":"时间区间"}],"chooseSource":[{"id":"1","source":"省平台","key":"province"},{"id":"2","source":"央企招投标","key":"central"}],"chooseClassify":[{"id":"00","type":"不限"},{"id":"01","type":"工程建设"},{"id":"02","type":"政府采购"},{"id":"03","type":"土地使用权"},{"id":"04","type":"矿业权"},{"id":"05","type":"国有产权"},{"id":"21","type":"碳排放权"},{"id":"22","type":"排污权"},{"id":"23","type":"药品采购权"},{"id":"24","type":"二类疫苗"},{"id":"25","type":"林权"},{"id":"90","type":"其他"}],"infoType":[{"id":"00","type":"不限","info":[{"id":"0000","name":"不限"},{"id":"0001","name":"交易公告"},{"id":"0002","name":"成交公示"}]},{"id":"01","type":"工程建设","info":[{"id":"0100","name":"不限"},{"id":"0101","name":"招标/资审公告"},{"id":"0102","name":"开标记录"},{"id":"0104","name":"交易结果公示"},{"id":"0105","name":"招标/资审文件澄清"}]},{"id":"02","type":"政府采购","info":[{"id":"0200","name":"不限"},{"id":"0201","name":"采购/资审公告"},{"id":"0202","name":"中标公告"},{"id":"0203","name":"采购合同"},{"id":"0204","name":"更正事项"}]},{"id":"03","type":"土地使用权","info":[{"id":"0300","name":"不限"},{"id":"0301","name":"出让公示"},{"id":"0302","name":"成交宗地"}]},{"id":"04","type":"矿业权","info":[{"id":"0400","name":"不限"},{"id":"0401","name":"出让公告"},{"id":"0402","name":"出让结果"},{"id":"0403","name":"公开信息"},{"id":"0404","name":"登记公告信息"}]},{"id":"05","type":"国有产权","info":[{"id":"0500","name":"不限"},{"id":"0501","name":"挂牌披露"},{"id":"0502","name":"交易结果"}]},{"id":"21","type":"碳排放权","info":[{"id":"2100","name":"不限"},{"id":"2101","name":"出售公告"},{"id":"2102","name":"结果公示"}]},{"id":"22","type":"排污权","info":[{"id":"2200","name":"不限"},{"id":"2201","name":"交易公告"},{"id":"2202","name":"结果公示"}]},{"id":"23","type":"药品采购权","info":[{"id":"2300","name":"不限"},{"id":"2302","name":"交易公告"},{"id":"2303","name":"交易目录"},{"id":"2304","name":"变更公告"}]},{"id":"24","type":"二类疫苗","info":[{"id":"2400","name":"不限"},{"id":"2402","name":"交易公告"},{"id":"2403","name":"交易目录"},{"id":"2404","name":"变更公告"}]},{"id":"25","type":"林权","info":[{"id":"2500","name":"不限"},{"id":"2501","name":"信息披露"},{"id":"2502","name":"成交公告"}]},{"id":"90","type":"其他","info":[{"id":"9000","name":"不限"},{"id":"9001","name":"交易公告"},{"id":"9002","name":"成交公示"}]}],"chooseTrade":[{"id":"0","trade":"不限"},{"id":"A01","trade":"农业"},{"id":"A02","trade":"林业"},{"id":"A03","trade":"畜牧业"},{"id":"A04","trade":"渔业"},{"id":"A05","trade":"农、林、牧、渔服务业"},{"id":"B06","trade":"煤炭开采和洗选业"},{"id":"B07","trade":"石油和天然气开采业"},{"id":"B08","trade":"黑色金属矿采选业"},{"id":"B09","trade":"有色金属矿采选业"},{"id":"C14","trade":"食品制造业"},{"id":"C16","trade":"烟草制品业"},{"id":"C17","trade":"纺织业"},{"id":"C21","trade":"家具制造业"},{"id":"C27","trade":"医药制造业"},{"id":"C28","trade":"化学纤维制造业"},{"id":"C33","trade":"金属制品业"},{"id":"C34","trade":"通用设备制造业"},{"id":"C36","trade":"汽车制造业"},{"id":"C38","trade":"电气机械和器材制造业"},{"id":"D44","trade":"电力、热力生产和供应业"},{"id":"D46","trade":"水的生产和供应业"},{"id":"E47","trade":"房屋建筑业"},{"id":"E50","trade":"建筑装饰和其他建筑业"},{"id":"G53","trade":"铁路运输业"},{"id":"G56","trade":"航空运输业"},{"id":"I65","trade":"软件和信息技术服务业"},{"id":"K70","trade":"房地产业"},{"id":"L72","trade":"商务服务业"},{"id":"N76","trade":"水利管理业"},{"id":"N77","trade":"生态保护和环境治理业"}]})
+    var captchaToken = ''
+    var verifyCode = ''
+    var currentPage = 1
+    $(function () {
+        setCityHtml(myProvince);
+        setPlatformHtml(myProvince, myCity);
+        $("#provinceId").val(myProvince);
+        $("#cityId").val(myCity);
+        $("#platformId").val(myPlatform);
+        $("#bidPlatformId").val('0');
+        /*if('=isShowAll' == '1') {
+			//展开高级搜索
+			$("#djxs").html('收起');
+			$(".qyhy").slideToggle(0);
+		}*/
+        $("#search_topleft").html('请选择查询条件进行查询...');
+        getList(1);
+
+        // 添加历史按钮点击事件
+        $('.history-button').on('click', function() {
+            $(this).css({
+              'background-color': '#75a7c4',
+              'color': 'white',
+              'padding': '5px 10px',
+              'border-radius': '5px'
+            });
+            window.location.href = '/history/dealList.html';
+        });
+    });
+
+    function txtsearch(e) {
+        var e = e || window.event;
+        if (e.keyCode == 13) {
+            cmd_find();
+        }
+    }
+
+    function filter() {
+        var top = parseInt($(window).height() - $('#filter').height(), 10) / 2
+        $('#filter').css({'top': top, 'width': $(document).width()});
+        $('#filter').show();
+    }
+
+    function filterHide() {
+        $('#filter').hide();
+    }
+
+    var ttlpage = 1;
+    var ttlrow = 0;
+    var currentpage = 1;
+
+    function cmd_find() {
+      // openVerifyModal()
+      history.pushState({}, '', `${window.location.origin}${window.location.pathname}`);
+      getList(1);
+    }
+
+    // 打开验证码弹窗
+    function openVerifyModal() {
+      layer.open({
+        type: 1,
+        title: '验证码验证',
+        area: ['350px', '200px'],
+        content: $('#verifyCodeModal'),
+        btn: ['提交', '取消'],
+        yes: function(index, layero){
+          // 表单验证
+          var verifyCode = $('#validationCode').val().trim();
+          
+          if(!verifyCode){
+            layer.msg('请输入验证码');
+            return false;
+          }
+
+          getList(currentPage, verifyCode);
+
+          // // 模拟提交验证
+          // $.post('/api/verify', {phone: phone, code: code}, function(res){
+          //   if(res.code === 0){
+          //     layer.msg('验证成功', {icon: 1, time: 1500}, function(){
+          //       layer.close(index);
+          //       // 调用父窗口方法（如刷新页面）
+          //       window.parent.location.reload();
+          //     });
+          //   } else {
+          //     layer.msg(res.msg, {icon: 2, time: 2000});
+          //     // 刷新验证码
+          //     $('#captchaImg').attr('src', 'captcha.php?' + new Date().getTime());
+          //   }
+          // });
+        },
+        cancel: function(index){
+          layer.close(index);
+        }
+      });
+    }
+
+    var isFirst = true;
+
+    function getList(pagenum, verifyCode) {
+      currentPage = pagenum || 1;
+      getList1(currentPage, verifyCode);
+    }
+
+    function getList1(pagenum, verifyCode) {
+        isFirst = false;
+        if (pagenum != 1 && (pagenum <= 0 || pagenum > ttlpage)) {
+            return false;
+        }
+        document.getElementById("PAGENUMBER").value = pagenum;
+        document.getElementById("DEAL_PROVINCE").value = $("#provinceId").val();
+        document.getElementById("DEAL_CITY").value = $("#cityId").val();
+        document.getElementById("DEAL_PLATFORM").value = $("#platformId").val();
+        document.getElementById("BID_PLATFORM").value = $("#bidPlatformId").val();
+
+        document.getElementById("TIMEBEGIN").value = $("#TIMEBEGIN_SHOW").val();
+        document.getElementById("TIMEEND").value = $("#TIMEEND_SHOW").val();
+
+        document.getElementById("DEAL_TIME").value = myDealTime;
+        document.getElementById("DEAL_CLASSIFY").value = myDealClassify;
+        document.getElementById("DEAL_STAGE").value = myDealStage;
+        document.getElementById("DEAL_TRADE").value = myDealTrade;
+        document.getElementById("SOURCE_TYPE").value = mySoureType;
+        //console.log('myDealTime', myDealTime, 'myDealClassify', myDealClassify, 'myDealStage', myDealStage, 'myDealTrade', myDealTrade, 'mySoureType', mySoureType)
+        if (checkDate()) {
+            /*if(myDealTime == '06' && document.getElementById("TIMEBEGIN_SHOW").value < '2023-12-19') {
+                if($("#validationCode").val() == '') {
+                  layer.alert('查询一个月以上的数据需要输入验证码');
+                  refreshCode();
+                  return false;
+                }
+              } else if(myDealTime == '05') {
+                if($("#validationCode").val() == '') {
+                  layer.alert("查询近三个月数据需要输入验证码");
+                  refreshCode();
+                  return false;
+                }
+              }*/
+
+            var formObject = {};
+            var formArray = $("#FIND").serializeArray();
+            $.each(formArray, function (i, item) {
+                if ( (item.name == "DEAL_CLASSIFY" && item.value == '00') 
+                     || (item.name == "DEAL_STAGE" && (item.value.substr(2) == '00' || item.value.substr(4) == '00'))
+                     || (item.name == "DEAL_TRADE" && item.value == '0')
+                     || (item.name == "DEAL_PROVINCE" && item.value == '0')
+                     || (item.name == "DEAL_CITY" && item.value == '0')
+                     || (item.name == "DEAL_PLATFORM" && item.value == '0')
+                     || (item.name == "BID_PLATFORM" && item.value == '0')
+                ) {
+                    // 所有选择不限的情况都不传参数
+                } else {
+                    formObject[item.name] = item.value.startsWith('bw') ? item.value.substr(2) : item.value;
+                }
+            });
+            var url = "/information/pubTradingInfo/getTradList";
+            var token = '';
+            if (verifyCode) {
+              token = `${captchaToken}#${verifyCode}`
+            }
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: formObject,
+                // contentType: 'application/json',
+                headers: {
+                    "Access-Control-Allow-Origin": 'http://ggzy.gov.cn',
+                    "X-Pass-Token": token
+                },
+                dataType: "json",
+                beforeSend: function () {
+                    $("#noDataShow").css("display", "none");
+                    filter();
+                },
+                success: function (data) {
+                    filterHide();
+                    if (data.code == 829) {
+                      openVerifyModal()
+                      let imgObj = document.getElementById("validationCodeImg");
+                      captchaToken = data.captchaToken;
+                      let captchaImage = data.captchaImage;
+                      imgObj.src = `data:image/png;base64,${captchaImage}`;
+                    } else if (data.code == 801) {
+                      layer.alert("错误:" + "\n" + data.message);
+                    } else if (data.code == 800) {
+                      layer.alert("眼睛累了，稍适休息！");
+                    }
+                    else if (data.code == 200) {
+                        $("#validationCode").val("");
+                        layer.closeAll();
+                        var json = data.data.records;
+                        var projecthtml = '';
+                        for (var i = 0; i < json.length; i++) {
+                            projecthtml += "<div class='publicont'><div>";
+                            projecthtml += "<h4>";
+                            projecthtml += "<a href='" + json[i].url + "' title='" + json[i].title + "' target='_blank'>" + addHighLight(json[i].title) + "</a>";
+                            // projecthtml += "" + "<a href='/deal/001302e9a797f2c540118c795cb8db5c29f3.html' title='" + "" + json[i].title + "' target='_blank'>" + json[i].titleShow + "</a>";
+                            projecthtml += "<span class='span_o'>" + (json[i].publishTime || '') + "</span>";
+                            projecthtml += "</h4>";
+
+                            projecthtml += "<p class='p_tw'>";
+                            projecthtml += "<span >省份：</span>";
+                            projecthtml += "<span class='span_on'>" + (json[i].provinceText || '') + "</span>";
+                            projecthtml += "<span >来源平台：</span>";
+                            projecthtml += "<span class='span_on' title=" + json[i].transactionSourcesPlatformText +">" + (cutString(json[i].transactionSourcesPlatformText) || '') + "</span>";
+                            projecthtml += "<span >业务类型：</span>";
+                            projecthtml += "<span class='span_on'>" + (json[i].businessTypeText || '') + "</span>";
+                            projecthtml += "<span >信息类型：</span>";
+                            projecthtml += "<span class='span_on'>" + (json[i].informationTypeText || '') + "</span>";
+                            if (json[i].businessTypeText == '工程建设') {
+                                projecthtml += "<span >行业：</span>";
+                                projecthtml += "<span class='span_on'>" +  (containsChinese(json[i].industryTypeText) ? json[i].industryTypeText : '')  + "</span>";
+                            }
+                            projecthtml += "</p>";
+                            projecthtml += "</div></div>";
+                        }
+
+                        $("#toview").html(projecthtml);
+
+                        ttlrow = data.data.total;
+                        ttlpage = data.data.pages;
+                        currentpage = data.data.current;
+
+                        $("#rowscount").html(ttlrow);
+                        $("#usetime").html(data.usetime + "ms");
+                        $("#topRight").html(currentpage + "/" + ttlpage);
+
+                        $("#search_topleft").html('<span class="span_left">搜索记录数:<b>' + ttlrow + '</b></span><span class="span_left">搜索用时:<b>' + data.usetime + 'ms</b></span>');
+                        if (ttlrow == 0) {
+                            $("#noDataShow").css("display", "");
+                        }
+
+                        $("#paging").html(createPageHTML(currentpage, ttlpage, "javascript:getList", ttlrow, "1"));
+
+                    } else {
+                        layer.alert("错误:" + "\n" + data.message);
+                    }
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    filterHide();
+                    layer.msg('连接失败', {
+                        time: 3000
+                    });
+                }
+            });
+
+        } else {
+            // refreshCode();
+        }
+    }
+
+    /**
+     * 刷新验证码
+     * @param imgObj 验证码Img元素
+     */
+    function refreshCode() {
+        let imgObj = document.getElementById("validationCodeImg");
+        $.get("/information/captcha")
+          .done(function(response) {
+            // console.log("成功:", response);
+            captchaToken = response.data.captchaToken;
+            let captchaImage = response.data.captchaImage;
+            imgObj.src = `data:image/png;base64,${captchaImage}`;
+          })
+          .fail(function(jqXHR, textStatus, errorThrown) {
+            layer.msg('获取验证码失败')
+        });
+        $("#validationCode").val("");
+    }
+</script></head>
+
+<body>
+<div class="header">
+  <div class="header_top">
+    <p class="p_fliat">
+      <a href="/SIC/web/govreport.po" target="_blank">政府网站工作年度报表</a>
+    </p>
+    <div id="addNewSearch">
+      <div class="p_last" style="margin-right:0px;"><a href="/serve/wechat/wechat.html" target="_blank"><img src="/assets/images/weixin.png" id="weixin"></a></div>
+    </div>
+    <div id="ewm">
+      <div class="arrows"><img src="/assets/images/ewm.png"></div>
+      <div class="div">
+        <div class="div_on"><img src="/assets/images/wechatserve.jpg" width="100" height="100">
+          <p>服务号</p>
+        </div>
+        <!--     <div class="div_tw"><img src="/assets/images/wechatdy.jpg" width="100" height="100"><p>订阅号</p></div> -->
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+    $(function () {
+        $("#weixin").hover(function () {
+            $("#ewm").slideDown();
+        }, function () {
+            var timeutId = setTimeout(function () {
+                $("#ewm").slideUp();
+            }, 100);
+            $("#ewm").hover(function () {
+                clearTimeout(timeutId);
+            }, function () {
+                $(this).slideUp();
+            });
+        });
+    });
+</script>
+<div class="banner">
+</div>
+<div class="nav_bj">
+  <div class="nav">
+    <ul class="nav_ul">
+      <li class="nav_stair nav_first"><a href="/">首页</a></li>
+      <li class="nav_stair"><a href="/SIC/web/govfunc.po">机构职能</a></li>
+      <li class="nav_stair"><a href="/deal/dealList.html">交易公开</a>
+        <ul class="nav_second nav_special">
+          <li><a href="/deal/dealList.html?HEADER_DEAL_TYPE=01">工程建设</a></li>
+          <li><a href="/deal/dealList.html?HEADER_DEAL_TYPE=02">政府采购</a></li>
+          <li><a href="/deal/dealList.html?HEADER_DEAL_TYPE=03">土地使用权</a></li>
+          <li><a href="/deal/dealList.html?HEADER_DEAL_TYPE=04">矿业权</a></li>
+          <li><a href="/deal/dealList.html?HEADER_DEAL_TYPE=05">国有产权</a></li>
+          <li><a href="/deal/dealList.html?HEADER_DEAL_TYPE=21">碳排放权</a></li>
+          <li><a href="/deal/dealList.html?HEADER_DEAL_TYPE=22">排污权</a></li>
+          <li><a href="/deal/dealList.html?HEADER_DEAL_TYPE=23">药品采购</a></li>
+          <li><a href="/deal/dealList.html?HEADER_DEAL_TYPE=24">二类疫苗</a></li>
+          <li><a href="/deal/dealList.html?HEADER_DEAL_TYPE=25">林权</a></li>
+          <li><a href="/deal/dealList.html?HEADER_DEAL_TYPE=90">其他</a></li>
+        </ul>
+      </li>
+      <li class="nav_stair"><a href="/deal/creditList.html">交易诚信</a>
+        <ul class="nav_second">
+          <li><a href="/deal/creditList.html?SHOWTYPE=1">违法违规</a></li>
+          <li><a href="/deal/creditList.html?SHOWTYPE=2">奖励信息</a></li>
+        </ul>
+      </li>
+      <li class="nav_stair"><a href="https://data.ggzy.gov.cn/">数据服务</a></li>
+      <li class="nav_stair"><a href="/dealCollect/dealCollect.html">交易统计</a></li>
+      <li class="nav_stair"><a href="/SIC/web/platform.po">平台导航</a></li>
+      <li class="nav_stair"><a href="/SIC/web/policyFileList.po">政策法规</a>
+        <ul class="nav_second">
+          <li><a href="/SIC/web/policyFileList.po">政策法规文件</a></li>
+          <li><a href="/SIC/web/policyReadList.po">政策法规解读</a></li>
+        </ul>
+      </li>
+      <!-- <li class="nav_stair"><a href="http://data.ggzy.gov.cn/portal_legal/cxcg/index.html" target="_blank">培训交流</a></li>-->
+      <!--     <li class="nav_stair"><a href="https://59.252.80.14/reTurnUrl" target="_blank">统一认证</a></li>-->
+      <li class="nav_stair"><a href="/serve/service.html">服务中心</a>
+        <ul class="nav_second">
+          <li><a href="http://data.ggzy.gov.cn/portal_legal/cxcg/index.html" target="_blank">培训交流</a></li>
+          <li><a href="/serve/wechat/wechat.html">微信订阅</a></li>
+          <li><a href="/SIC/web/opinion.po">意见建议</a></li>
+          <li><a href="/SIC/web/collectList.po">调查征集</a></li>
+          <li><a href="/serve/regards/regards.html">关于我们</a></li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="location" style="margin-bottom:0;">
+  <a href="/">首页</a>&nbsp;&nbsp;&gt;&nbsp;&nbsp;<a href="/deal/dealList.html">交易公开</a>
+</div>
+<div class="main">
+  <h4>交易查询</h4>
+  <form id="FIND" name="FIND" method="post">
+    <div class="choose_on choose_time">
+      <span class="span_on">发布时间：</span>
+      <ul>
+        <span id="dateShowId" style="display: none;margin-left: 5px">
+				<span>
+          <input class="input" type="text" id="TIMEBEGIN_SHOW" name="TIMEBEGIN_SHOW" autocomplete="off" value="" placeholder="开始时间" style="">
+        </span>
+                -
+				<span>
+          <input class="input" type="text" id="TIMEEND_SHOW" name="TIMEEND_SHOW" autocomplete="off" value="" placeholder="结束时间" style="">
+        </span>
+				</span>
+      <li id="choose_time_01"><a href="javascript:;">当天</a></li><li id="choose_time_02" class="toggle"><a href="javascript:;">近三天</a></li><li id="choose_time_03"><a href="javascript:;">近十天</a></li><li id="choose_time_04"><a href="javascript:;">近一月</a></li><li id="choose_time_05"><a href="javascript:;">近三月</a></li><li id="choose_time_06"><a href="javascript:;">时间区间</a></li></ul>
+
+      <span class="history-button" style="cursor: pointer;">一年前数据</span>
+    </div>
+    <!--这块固定-->
+    <div class="choose_on">
+      <span class="span_on">数据来源：</span>
+      <ul><li id="choose_source_1" class="toggle"><a href="javascript:;">省平台</a></li><li id="choose_source_2"><a href="javascript:;">央企招投标</a></li><li id="choose_source_6"><a href="javascript:;">商务部</a></li><li id="choose_source_3"><a href="javascript:;">财政部</a></li><li id="choose_source_4"><a href="javascript:;">自然资源部</a></li><li id="choose_source_5"><a href="javascript:;">国资委</a></li></ul>
+    </div>
+    <div class="qyhy">
+      <div class="choose_on provinceDiv">
+        <span class="span_on">交易来源：</span>
+        <ul style="height:30px;">
+          <li>省份：
+            <select id="provinceId"><option value="0">不限</option><option value="110000">北京</option><option value="120000">天津</option><option value="130000">河北</option><option value="140000">山西</option><option value="150000">内蒙古</option><option value="210000">辽宁</option><option value="220000">吉林</option><option value="230000">黑龙江</option><option value="310000">上海</option><option value="320000">江苏</option><option value="330000">浙江</option><option value="340000">安徽</option><option value="350000">福建</option><option value="360000">江西</option><option value="370000">山东</option><option value="410000">河南</option><option value="420000">湖北</option><option value="430000">湖南</option><option value="440000">广东</option><option value="450000">广西</option><option value="460000">海南</option><option value="500000">重庆</option><option value="510000">四川</option><option value="520000">贵州</option><option value="530000">云南</option><option value="540000">西藏</option><option value="610000">陕西</option><option value="620000">甘肃</option><option value="630000">青海</option><option value="640000">宁夏</option><option value="650000">新疆</option><option value="660000">兵团</option></select>
+          </li>
+          <li>市：
+            <select id="cityId"><option value="0">不限</option></select>
+          </li>
+          <li>来源平台：
+            <select id="platformId" style="width:250px;"><option value="0">不限</option></select>
+          </li>
+        </ul>
+      </div>
+      <div class="choose_on bidDiv" style="display: none;">
+        <span class="span_on">交易来源：</span>
+        <ul style="height:30px;">
+          <li>来源平台：
+            <select id="bidPlatformId" style="width: 400px;"><option value="0">不限</option><option value="C1100000259">中国化工装备招投标交易平台</option><option value="C1100000096">中国兵器电子招标投标交易平台</option><option value="D1100000008">中国电力设备信息网电子招标交易平台</option><option value="D1100000098">中国长江三峡集团公司电子采购平台</option><option value="B1100000014">中国石化电子招标投标交易平台（物资装备）</option><option value="E1100000179">中国交建物资采购管理信息系统</option><option value="G1100000193">中国交建装备采购管理信息系统</option><option value="D1100000001">国家电网公司电子商务平台</option><option value="D1100000002">国家电网公司电子商务平台</option><option value="C1101080263">中国兵器装备集团有限公司招标投标交易平台</option><option value="D1100000011">国电集团电子招投标平台</option><option value="B1100000013">中国石化电子招标投标交易平台（工程、服务）</option><option value="L1100000165">国家开发投资公司电子采购平台</option><option value="I1100000181">南水北调中线建管局招标采购交易平台</option><option value="C1101000272">航空工业电子采购平台电子招投标专区</option><option value="I1100000073">中国移动电子采购与招标投标系统</option><option value="D1100000088">神华招标网</option><option value="B1100000010">中国石油电子招投标交易平台</option><option value="E1100000089">中国铁物电子招投标平台</option><option value="C1100000005">中航招标平台</option><option value="B1100000009">中煤电子招投标平台</option><option value="D1100000269">大唐电子商务平台</option><option value="I1100000196">中国大唐集团公司电子商务平台</option><option value="F1101080264">中铁建电子采购平台</option><option value="C1100000189">中国航天科技电子采购平台</option><option value="G1100000175">招商局集团电子招标采购交易平台</option><option value="D1100000152">中国华电集团公司电子商务平台</option><option value="C1100000187">航发网上商城电子招投标专区</option><option value="D1100000028">中国华能集团电子招投标系统</option><option value="D1305000277">冀中能源集团招标投标电子交易平台</option><option value="D1501000258">内蒙古电力集团电子商务系统</option><option value="C2103000033">鞍钢集团电子招标投标交易平台</option><option value="C2201000275">中国一汽电子招标采购交易平台</option><option value="C1101080262">吉林国投招标投标交易平台</option><option value="C3100000019">上海宝华电子招投标交易平台</option><option value="E3309000192">中交舟山公司招标采购平台</option><option value="I3701000256">浪潮集团采购电子商务平台</option><option value="C4201000018">东风招投标交易中心电子交易平台</option><option value="C4201000016">武钢电子招标投标平台</option><option value="D4401000176">中国南方电网电子商务系统</option><option value="D4403000371">中广核电子商务平台</option><option value="I1100000755">中国电信阳光采购网电子招投标交易平台</option><option value="E5101000890">云筑网</option><option value="D1101080855">中国节能环保集团有限公司电子采购平台</option><option value="D4403030148">华润集团守正电子招标平台</option><option value="D1100000133">中国海洋石油集团有限公司采办业务管理与交易系统</option><option value="K4403050754">华侨城电子招采平台</option><option value="D1101080711">中国电建公共资源交易系统</option><option value="E1100000900">铁建云商电子商务平台</option><option value="E1100000879">中国五矿集团采购电子商务平台</option><option value="I1100000727">中国联通电子招标投标交易平台</option><option value="M1100000751">中化商务电子招投标平台</option><option value="A2301010892">北大荒电子招标平台</option><option value="E4103010399">铁建汇采工程物资设备电商平台</option><option value="I1101080883">CEC电子采购平台</option><option value="G1100000081">中国中铁采购电子商务平台</option><option value="G1101020874">中远海运集团采购及供应商管理系统</option><option value="B1100000286">中铝集团电子招投标平台</option><option value="L1100000076">中国通用招标网</option><option value="G1100000997">国铁采购平台</option><option value="K4403050904">华润置地采购云平台</option><option value="C1100000952">航空工业电子招投标平台</option><option value="E3100000977">宝华智慧招标共享平台</option><option value="D3100000943">中核集团电子采购平台</option><option value="G3100000948">东航集团集采实施平台</option><option value="G1100000926">通号物资集团电子商务平台</option><option value="B1100000958">中国有色集团采购招标电子商务平台</option><option value="D1100000279">中国能源建设集团电子采购平台</option><option value="G1100005013">中国航空油料集团采购管理信息系统</option><option value="E1100000932">中国电建设备物资集中采购平台</option></select>
+          </li>
+        </ul>
+      </div>
+      <!--这块信息固定-->
+      <div class="choose_on">
+        <span class="span_on">业务类型：</span>
+        <ul><li id="choose_classify_00" class="toggle"><a href="javascript:;">不限</a></li><li id="choose_classify_01"><a href="javascript:;">工程建设</a></li><li id="choose_classify_bw01" style="display:none;"><a href="javascript:;">工程建设</a></li><li id="choose_classify_02"><a href="javascript:;">政府采购</a></li><li id="choose_classify_bw02" style="display:none;"><a href="javascript:;">政府采购</a></li><li id="choose_classify_03"><a href="javascript:;">土地使用权</a></li><li id="choose_classify_04"><a href="javascript:;">矿业权</a></li><li id="choose_classify_bw04" style="display:none;"><a href="javascript:;">矿业权</a></li><li id="choose_classify_05"><a href="javascript:;">国有产权</a></li><li id="choose_classify_21"><a href="javascript:;">碳排放权</a></li><li id="choose_classify_22"><a href="javascript:;">排污权</a></li><li id="choose_classify_23"><a href="javascript:;">药品采购权</a></li><li id="choose_classify_24"><a href="javascript:;">二类疫苗</a></li><li id="choose_classify_25"><a href="javascript:;">林权</a></li><li id="choose_classify_90"><a href="javascript:;">其他</a></li></ul>
+      </div>
+      <div class="choose_on" id="choose_classify_00_show" style="display: block;">
+        <span class="span_on">信息类型：</span>
+        <ul>
+        <li id="choose_stage_0000" class="toggle"><a href="javascript:;">不限</a></li><li id="choose_stage_0001"><a href="javascript:;">交易公告</a></li><li id="choose_stage_0002"><a href="javascript:;">成交公示</a></li></ul>
+      </div>
+
+      <div class="choose_on" id="choose_classify_01_show" style="display:none;">
+        <span class="span_on">信息类型：</span>
+        <ul>
+        <li id="choose_stage_0100" class=""><a href="javascript:;">不限</a></li><li id="choose_stage_0101"><a href="javascript:;">招标/资审公告</a></li><li id="choose_stage_0102"><a href="javascript:;">开标记录</a></li><li id="choose_stage_0104"><a href="javascript:;">交易结果公示</a></li><li id="choose_stage_0105"><a href="javascript:;">招标/资审文件澄清</a></li></ul>
+      </div>
+
+      <div class="choose_on" id="choose_classify_bw01_show" style="display:none;">
+        <span class="span_on">信息类型：</span>
+        <ul>
+        <li id="choose_stage_bw0100" class=""><a href="javascript:;">不限</a></li><li id="choose_stage_bw0101"><a href="javascript:;">招标/资审公告</a></li><li id="choose_stage_bw0104"><a href="javascript:;">中标结果公示</a></li></ul>
+      </div>
+
+      <div class="choose_on" id="choose_classify_02_show" style="display:none;">
+        <span class="span_on">信息类型：</span>
+        <ul>
+        <li id="choose_stage_0200" class=""><a href="javascript:;">不限</a></li><li id="choose_stage_0201"><a href="javascript:;">采购/资审公告</a></li><li id="choose_stage_0202"><a href="javascript:;">中标公告</a></li><li id="choose_stage_0203"><a href="javascript:;">采购合同</a></li><li id="choose_stage_0204"><a href="javascript:;">更正事项</a></li></ul>
+      </div>
+
+      <div class="choose_on" id="choose_classify_bw02_show" style="display:none;">
+        <span class="span_on">信息类型：</span>
+        <ul>
+        <li id="choose_stage_bw0200" class=""><a href="javascript:;">不限</a></li><li id="choose_stage_bw0201"><a href="javascript:;">公告信息</a></li><li id="choose_stage_bw0203"><a href="javascript:;">采购合同</a></li></ul>
+      </div>
+
+      <div class="choose_on" id="choose_classify_03_show" style="display:none;">
+        <span class="span_on">信息类型：</span>
+        <ul>
+        <li id="choose_stage_0300" class=""><a href="javascript:;">不限</a></li><li id="choose_stage_0301"><a href="javascript:;">出让公示</a></li><li id="choose_stage_0302"><a href="javascript:;">成交宗地</a></li></ul>
+      </div>
+
+      <div class="choose_on" id="choose_classify_04_show" style="display:none;">
+        <span class="span_on">信息类型：</span>
+        <ul>
+        <li id="choose_stage_0400" class=""><a href="javascript:;">不限</a></li><li id="choose_stage_0401"><a href="javascript:;">出让公告</a></li><li id="choose_stage_0402"><a href="javascript:;">出让结果</a></li><li id="choose_stage_0403"><a href="javascript:;">公开信息</a></li><li id="choose_stage_0404"><a href="javascript:;">登记公告信息</a></li></ul>
+      </div>
+
+      <div class="choose_on" id="choose_classify_bw04_show" style="display:none;">
+        <span class="span_on">信息类型：</span>
+        <ul>
+        <li id="choose_stage_bw0400" class=""><a href="javascript:;">不限</a></li><li id="choose_stage_bw0401"><a href="javascript:;">出让公告</a></li><li id="choose_stage_bw0402"><a href="javascript:;">出让结果</a></li></ul>
+      </div>
+
+      <div class="choose_on" id="choose_classify_05_show" style="display:none;">
+        <span class="span_on">信息类型：</span>
+        <ul>
+        <li id="choose_stage_0500" class=""><a href="javascript:;">不限</a></li><li id="choose_stage_0501"><a href="javascript:;">挂牌披露</a></li><li id="choose_stage_0502"><a href="javascript:;">交易结果</a></li></ul>
+      </div>
+
+      <div class="choose_on" id="choose_classify_21_show" style="display:none;">
+        <span class="span_on">信息类型：</span>
+        <ul>
+        <li id="choose_stage_2100" class=""><a href="javascript:;">不限</a></li><li id="choose_stage_2101"><a href="javascript:;">出售公告</a></li><li id="choose_stage_2102"><a href="javascript:;">结果公示</a></li></ul>
+      </div>
+
+      <div class="choose_on" id="choose_classify_22_show" style="display:none;">
+        <span class="span_on">信息类型：</span>
+        <ul>
+        <li id="choose_stage_2200" class=""><a href="javascript:;">不限</a></li><li id="choose_stage_2201"><a href="javascript:;">交易公告</a></li><li id="choose_stage_2202"><a href="javascript:;">结果公示</a></li></ul>
+      </div>
+
+      <div class="choose_on" id="choose_classify_23_show" style="display:none;">
+        <span class="span_on">信息类型：</span>
+        <ul>
+        <li id="choose_stage_2300" class=""><a href="javascript:;">不限</a></li><li id="choose_stage_2302"><a href="javascript:;">交易公告</a></li><li id="choose_stage_2303"><a href="javascript:;">交易目录</a></li><li id="choose_stage_2304"><a href="javascript:;">变更公告</a></li></ul>
+      </div>
+
+      <div class="choose_on" id="choose_classify_24_show" style="display:none;">
+        <span class="span_on">信息类型：</span>
+        <ul>
+        <li id="choose_stage_2400" class=""><a href="javascript:;">不限</a></li><li id="choose_stage_2402"><a href="javascript:;">交易公告</a></li><li id="choose_stage_2403"><a href="javascript:;">交易目录</a></li><li id="choose_stage_2404"><a href="javascript:;">变更公告</a></li></ul>
+      </div>
+
+      <div class="choose_on" id="choose_classify_25_show" style="display:none;">
+        <span class="span_on">信息类型：</span>
+        <ul>
+        <li id="choose_stage_2500" class=""><a href="javascript:;">不限</a></li><li id="choose_stage_2501"><a href="javascript:;">信息披露</a></li><li id="choose_stage_2502"><a href="javascript:;">成交公告</a></li></ul>
+      </div>
+
+      <div class="choose_on" id="choose_classify_90_show" style="display:none;">
+        <span class="span_on">信息类型：</span>
+        <ul>
+        <li id="choose_stage_9000" class=""><a href="javascript:;">不限</a></li><li id="choose_stage_9001"><a href="javascript:;">交易公告</a></li><li id="choose_stage_9002"><a href="javascript:;">成交公示</a></li></ul>
+      </div>
+
+
+      <div class="choose_on choose_tw" id="choose_trade_div_01" style="display: none;">
+        <span class="span_on">行业：</span>
+        <ul id="choose_trade_ul_01">
+        <li id="choose_trade_0" class="toggle"><a href="javascript:;">不限</a></li><li id="choose_trade_A01"><a href="javascript:;">农业</a></li><li id="choose_trade_A02"><a href="javascript:;">林业</a></li><li id="choose_trade_A03"><a href="javascript:;">畜牧业</a></li><li id="choose_trade_A04"><a href="javascript:;">渔业</a></li><li id="choose_trade_A05"><a href="javascript:;">农、林、牧、渔服务业</a></li><li id="choose_trade_B06"><a href="javascript:;">煤炭开采和洗选业</a></li><li id="choose_trade_B07"><a href="javascript:;">石油和天然气开采业</a></li><li id="choose_trade_B08"><a href="javascript:;">黑色金属矿采选业</a></li><li id="choose_trade_B09"><a href="javascript:;">有色金属矿采选业</a></li><li id="choose_trade_C14"><a href="javascript:;">食品制造业</a></li><li id="choose_trade_C16"><a href="javascript:;">烟草制品业</a></li><li id="choose_trade_C17"><a href="javascript:;">纺织业</a></li><li id="choose_trade_C21"><a href="javascript:;">家具制造业</a></li><li id="choose_trade_C27"><a href="javascript:;">医药制造业</a></li><li id="choose_trade_C28"><a href="javascript:;">化学纤维制造业</a></li><li id="choose_trade_C33"><a href="javascript:;">金属制品业</a></li><li id="choose_trade_C34"><a href="javascript:;">通用设备制造业</a></li><li id="choose_trade_C36"><a href="javascript:;">汽车制造业</a></li><li id="choose_trade_C38"><a href="javascript:;">电气机械和器材制造业</a></li><li id="choose_trade_D44"><a href="javascript:;">电力、热力生产和供应业</a></li><li id="choose_trade_D46"><a href="javascript:;">水的生产和供应业</a></li><li id="choose_trade_E47"><a href="javascript:;">房屋建筑业</a></li><li id="choose_trade_E50"><a href="javascript:;">建筑装饰和其他建筑业</a></li><li id="choose_trade_G53"><a href="javascript:;">铁路运输业</a></li><li id="choose_trade_G56"><a href="javascript:;">航空运输业</a></li><li id="choose_trade_I65"><a href="javascript:;">软件和信息技术服务业</a></li><li id="choose_trade_K70"><a href="javascript:;">房地产业</a></li><li id="choose_trade_L72"><a href="javascript:;">商务服务业</a></li><li id="choose_trade_N76"><a href="javascript:;">水利管理业</a></li><li id="choose_trade_N77"><a href="javascript:;">生态保护和环境治理业</a></li></ul>
+        <span class="spanthis_on" id="span_hy_on_01">更多∨</span>
+      </div>
+    </div>
+    <input type="hidden" id="TIMEBEGIN" name="TIMEBEGIN" value="2026-03-06" style="">
+    <input type="hidden" id="TIMEEND" name="TIMEEND" value="2026-03-17" style="">
+    <input type="hidden" id="SOURCE_TYPE" name="SOURCE_TYPE" value="1" style="">
+    <input type="hidden" id="DEAL_TIME" name="DEAL_TIME" value="02" style="">
+    <input type="hidden" id="DEAL_CLASSIFY" name="DEAL_CLASSIFY" value="00" style="">
+    <input type="hidden" id="DEAL_STAGE" name="DEAL_STAGE" value="0000" style="">
+    <input type="hidden" id="DEAL_PROVINCE" name="DEAL_PROVINCE" value="0" style="">
+    <input type="hidden" id="DEAL_CITY" name="DEAL_CITY" value="0" style="">
+    <input type="hidden" id="DEAL_PLATFORM" name="DEAL_PLATFORM" value="0" style="">
+    <input type="hidden" id="BID_PLATFORM" name="BID_PLATFORM" value="0" style="">
+    <input type="hidden" id="DEAL_TRADE" name="DEAL_TRADE" value="0" style="">
+    <input type="hidden" id="isShowAll" name="isShowAll" value="1" style="">
+    <input type="hidden" id="PAGENUMBER" name="PAGENUMBER" value="1" style="">
+    <div class="search" style="padding-left: 150px;">
+      <input type="text" id="FINDTXT" name="FINDTXT" value="" onkeypress="txtsearch(event)" placeholder="请输入关键字" style="">
+      <input type="button" id="searchButton" onclick="cmd_find();" value="搜索" style="">
+      <span id="djxs">收起∧</span>       
+    </div>
+  </form>
+</div>
+
+<div id="verifyCodeModal" style="display: none; padding: 20px;">
+  <div style="display: flex; align-items: center;">
+    <input type="text" id="validationCode" name="validationCode" style="margin-left: 15px; width: 100px; height: 35px; outline: none; line-height: 35px; border: 1px solid rgb(117, 167, 196); font-size: 15px; font-family: 微软雅黑; border-radius: 4px; text-align: center;" placeholder="验证码">
+    <img id="validationCodeImg" alt="验证码图片" style="cursor: pointer; padding-left: 10px; " title="点击刷新验证码" src="/information/captcha" onclick="refreshCode(this)">
+  </div>
+</div>
+
+<div class="publiclycont" id="publicl">
+
+  <div class="contp" style="margin-top: 30px;">
+	   		<span id="search_topleft"><span class="span_left">搜索记录数:<b>23621</b></span><span class="span_left">搜索用时:<b>1ms</b></span></span>
+    <span style="margin-left: 210px;font-size: 16px;display: none;" id="noDataShow"><b>所选条件下暂无信息发布，请重新选择查询条件。</b></span>
+    <span class="span_right">页码<b id="topRight">1/1182</b></span>
+  </div>
+
+  <div id="toview"><div class="publicont"><div><h4><a href="/information/deal/html/a/530000/0302/20260317/005391cf8de314574e36b846b78a08e5955e.html" title="南华县2025-G-8-208号地块国有建设用地使用权挂牌出让成交公示" target="_blank"><span class="p_tit"></span>南<span class="p_tit"></span>华<span class="p_tit"></span>县<span class="p_tit"></span>2<span class="p_tit"></span>0<span class="p_tit"></span>2<span class="p_tit"></span>5<span class="p_tit"></span>-<span class="p_tit"></span>G<span class="p_tit"></span>-<span class="p_tit"></span>8<span class="p_tit"></span>-<span class="p_tit"></span>2<span class="p_tit"></span>0<span class="p_tit"></span>8<span class="p_tit"></span>号<span class="p_tit"></span>地<span class="p_tit"></span>块<span class="p_tit"></span>国<span class="p_tit"></span>有<span class="p_tit"></span>建<span class="p_tit"></span>设<span class="p_tit"></span>用<span class="p_tit"></span>地<span class="p_tit"></span>使<span class="p_tit"></span>用<span class="p_tit"></span>权<span class="p_tit"></span>挂<span class="p_tit"></span>牌<span class="p_tit"></span>出<span class="p_tit"></span>让<span class="p_tit"></span>成<span class="p_tit"></span>交<span class="p_tit"></span>公<span class="p_tit"></span>示<span class="p_tit"></span></a><span class="span_o">2026-03-17</span></h4><p class="p_tw"><span>省份：</span><span class="span_on">云南省</span><span>来源平台：</span><span class="span_on" title="云南省公共资源交易中心">云南省公共资源交易中心</span><span>业务类型：</span><span class="span_on">土地使用权</span><span>信息类型：</span><span class="span_on">成交宗地</span></p></div></div><div class="publicont"><div><h4><a href="/information/deal/html/a/530000/0302/20260317/00536a6674857022444cb840f35bb6901492.html" title="江城县J2025-026号宗地国有建设用地使用权挂牌出让成交结果公示" target="_blank"><span class="p_tit"></span>江<span class="p_tit"></span>城<span class="p_tit"></span>县<span class="p_tit"></span>J<span class="p_tit"></span>2<span class="p_tit"></span>0<span class="p_tit"></span>2<span class="p_tit"></span>5<span class="p_tit"></span>-<span class="p_tit"></span>0<span class="p_tit"></span>2<span class="p_tit"></span>6<span class="p_tit"></span>号<span class="p_tit"></span>宗<span class="p_tit"></span>地<span class="p_tit"></span>国<span class="p_tit"></span>有<span class="p_tit"></span>建<span class="p_tit"></span>设<span class="p_tit"></span>用<span class="p_tit"></span>地<span class="p_tit"></span>使<span class="p_tit"></span>用<span class="p_tit"></span>权<span class="p_tit"></span>挂<span class="p_tit"></span>牌<span class="p_tit"></span>出<span class="p_tit"></span>让<span class="p_tit"></span>成<span class="p_tit"></span>交<span class="p_tit"></span>结<span class="p_tit"></span>果<span class="p_tit"></span>公<span class="p_tit"></span>示<span class="p_tit"></span></a><span class="span_o">2026-03-17</span></h4><p class="p_tw"><span>省份：</span><span class="span_on">云南省</span><span>来源平台：</span><span class="span_on" title="云南省公共资源交易中心">云南省公共资源交易中心</span><span>业务类型：</span><span class="span_on">土地使用权</span><span>信息类型：</span><span class="span_on">成交宗地</span></p></div></div><div class="publicont"><div><h4><a href="/information/deal/html/a/140000/0101/20260317/001424ec106bd4b74b8fa607e338953808f2.html" title="山西转型综合改革示范区实验学校建设工程（高中区域部分）施工（第一标段）隔震支座暂估价采购项目招标公告" target="_blank"><span class="p_tit"></span>山<span class="p_tit"></span>西<span class="p_tit"></span>转<span class="p_tit"></span>型<span class="p_tit"></span>综<span class="p_tit"></span>合<span class="p_tit"></span>改<span class="p_tit"></span>革<span class="p_tit"></span>示<span class="p_tit"></span>范<span class="p_tit"></span>区<span class="p_tit"></span>实<span class="p_tit"></span>验<span class="p_tit"></span>学<span class="p_tit"></span>校<span class="p_tit"></span>建<span class="p_tit"></span>设<span class="p_tit"></span>工<span class="p_tit"></span>程<span class="p_tit"></span>（<span class="p_tit"></span>高<span class="p_tit"></span>中<span class="p_tit"></span>区<span class="p_tit"></span>域<span class="p_tit"></span>部<span class="p_tit"></span>分<span class="p_tit"></span>）<span class="p_tit"></span>施<span class="p_tit"></span>工<span class="p_tit"></span>（<span class="p_tit"></span>第<span class="p_tit"></span>一<span class="p_tit"></span>标<span class="p_tit"></span>段<span class="p_tit"></span>）<span class="p_tit"></span>隔<span class="p_tit"></span>震<span class="p_tit"></span>支<span class="p_tit"></span>座<span class="p_tit"></span>暂<span class="p_tit"></span>估<span class="p_tit"></span>价<span class="p_tit"></span>采<span class="p_tit"></span>购<span class="p_tit"></span>项<span class="p_tit"></span>目<span class="p_tit"></span>招<span class="p_tit"></span>标<span class="p_tit"></span>公<span class="p_tit"></span>告<span class="p_tit"></span></a><span class="span_o">2026-03-17</span></h4><p class="p_tw"><span>省份：</span><span class="span_on">山西省</span><span>来源平台：</span><span class="span_on" title="null"></span><span>业务类型：</span><span class="span_on">工程建设</span><span>信息类型：</span><span class="span_on">招标/资审公告</span><span>行业：</span><span class="span_on"></span></p></div></div><div class="publicont"><div><h4><a href="/information/deal/html/a/140000/0101/20260317/0014165b07acf9a74969aef2bef6b9488ef3.html" title="山西转型综合改革示范区实验学校建设工程（高中区域部分）施工（第一标段）隔震支座暂估价采购项目招标变更公告" target="_blank"><span class="p_tit"></span>山<span class="p_tit"></span>西<span class="p_tit"></span>转<span class="p_tit"></span>型<span class="p_tit"></span>综<span class="p_tit"></span>合<span class="p_tit"></span>改<span class="p_tit"></span>革<span class="p_tit"></span>示<span class="p_tit"></span>范<span class="p_tit"></span>区<span class="p_tit"></span>实<span class="p_tit"></span>验<span class="p_tit"></span>学<span class="p_tit"></span>校<span class="p_tit"></span>建<span class="p_tit"></span>设<span class="p_tit"></span>工<span class="p_tit"></span>程<span class="p_tit"></span>（<span class="p_tit"></span>高<span class="p_tit"></span>中<span class="p_tit"></span>区<span class="p_tit"></span>域<span class="p_tit"></span>部<span class="p_tit"></span>分<span class="p_tit"></span>）<span class="p_tit"></span>施<span class="p_tit"></span>工<span class="p_tit"></span>（<span class="p_tit"></span>第<span class="p_tit"></span>一<span class="p_tit"></span>标<span class="p_tit"></span>段<span class="p_tit"></span>）<span class="p_tit"></span>隔<span class="p_tit"></span>震<span class="p_tit"></span>支<span class="p_tit"></span>座<span class="p_tit"></span>暂<span class="p_tit"></span>估<span class="p_tit"></span>价<span class="p_tit"></span>采<span class="p_tit"></span>购<span class="p_tit"></span>项<span class="p_tit"></span>目<span class="p_tit"></span>招<span class="p_tit"></span>标<span class="p_tit"></span>变<span class="p_tit"></span>更<span class="p_tit"></span>公<span class="p_tit"></span>告<span class="p_tit"></span></a><span class="span_o">2026-03-17</span></h4><p class="p_tw"><span>省份：</span><span class="span_on">山西省</span><span>来源平台：</span><span class="span_on" title="null"></span><span>业务类型：</span><span class="span_on">工程建设</span><span>信息类型：</span><span class="span_on">招标/资审公告</span><span>行业：</span><span class="span_on"></span></p></div></div><div class="publicont"><div><h4><a href="/information/deal/html/a/420000/0203/20260317/004226c6cc2229304c0e97a692412ea6f60d.html" title="武汉市建设工程施工图设计文件审查服务合同高新八路改造工程（武阳高速共线段）（施工图、基坑）" target="_blank"><span class="p_tit"></span>武<span class="p_tit"></span>汉<span class="p_tit"></span>市<span class="p_tit"></span>建<span class="p_tit"></span>设<span class="p_tit"></span>工<span class="p_tit"></span>程<span class="p_tit"></span>施<span class="p_tit"></span>工<span class="p_tit"></span>图<span class="p_tit"></span>设<span class="p_tit"></span>计<span class="p_tit"></span>文<span class="p_tit"></span>件<span class="p_tit"></span>审<span class="p_tit"></span>查<span class="p_tit"></span>服<span class="p_tit"></span>务<span class="p_tit"></span>合<span class="p_tit"></span>同<span class="p_tit"></span>高<span class="p_tit"></span>新<span class="p_tit"></span>八<span class="p_tit"></span>路<span class="p_tit"></span>改<span class="p_tit"></span>造<span class="p_tit"></span>工<span class="p_tit"></span>程<span class="p_tit"></span>（<span class="p_tit"></span>武<span class="p_tit"></span>阳<span class="p_tit"></span>高<span class="p_tit"></span>速<span class="p_tit"></span>共<span class="p_tit"></span>线<span class="p_tit"></span>段<span class="p_tit"></span>）<span class="p_tit"></span>（<span class="p_tit"></span>施<span class="p_tit"></span>工<span class="p_tit"></span>图<span class="p_tit"></span>、<span class="p_tit"></span>基<span class="p_tit"></span>坑<span class="p_tit"></span>）<span class="p_tit"></span></a><span class="span_o">2026-03-17</span></h4><p class="p_tw"><span>省份：</span><span class="span_on">湖北省</span><span>来源平台：</span><span class="span_on" title="湖北省政府采购网">湖北省政府采购网</span><span>业务类型：</span><span class="span_on">政府采购</span><span>信息类型：</span><span class="span_on">采购合同</span></p></div></div><div class="publicont"><div><h4><a href="/information/deal/html/a/420000/0203/20260317/00424fa227306516472ea1b1280c6f42aa15.html" title="武汉东湖新技术开发区党政办公室会议室投影系统提升改造项目合同" target="_blank"><span class="p_tit"></span>武<span class="p_tit"></span>汉<span class="p_tit"></span>东<span class="p_tit"></span>湖<span class="p_tit"></span>新<span class="p_tit"></span>技<span class="p_tit"></span>术<span class="p_tit"></span>开<span class="p_tit"></span>发<span class="p_tit"></span>区<span class="p_tit"></span>党<span class="p_tit"></span>政<span class="p_tit"></span>办<span class="p_tit"></span>公<span class="p_tit"></span>室<span class="p_tit"></span>会<span class="p_tit"></span>议<span class="p_tit"></span>室<span class="p_tit"></span>投<span class="p_tit"></span>影<span class="p_tit"></span>系<span class="p_tit"></span>统<span class="p_tit"></span>提<span class="p_tit"></span>升<span class="p_tit"></span>改<span class="p_tit"></span>造<span class="p_tit"></span>项<span class="p_tit"></span>目<span class="p_tit"></span>合<span class="p_tit"></span>同<span class="p_tit"></span></a><span class="span_o">2026-03-17</span></h4><p class="p_tw"><span>省份：</span><span class="span_on">湖北省</span><span>来源平台：</span><span class="span_on" title="湖北省政府采购网">湖北省政府采购网</span><span>业务类型：</span><span class="span_on">政府采购</span><span>信息类型：</span><span class="span_on">采购合同</span></p></div></div><div class="publicont"><div><h4><a href="/information/deal/html/a/320000/0101/20260317/00321d70e70e391943d9a23e368782b06416.html" title="南通美亚热电供星源材质蒸汽管道工程施工招标公告" target="_blank"><span class="p_tit"></span>南<span class="p_tit"></span>通<span class="p_tit"></span>美<span class="p_tit"></span>亚<span class="p_tit"></span>热<span class="p_tit"></span>电<span class="p_tit"></span>供<span class="p_tit"></span>星<span class="p_tit"></span>源<span class="p_tit"></span>材<span class="p_tit"></span>质<span class="p_tit"></span>蒸<span class="p_tit"></span>汽<span class="p_tit"></span>管<span class="p_tit"></span>道<span class="p_tit"></span>工<span class="p_tit"></span>程<span class="p_tit"></span>施<span class="p_tit"></span>工<span class="p_tit"></span>招<span class="p_tit"></span>标<span class="p_tit"></span>公<span class="p_tit"></span>告<span class="p_tit"></span></a><span class="span_o">2026-03-17</span></h4><p class="p_tw"><span>省份：</span><span class="span_on">江苏省</span><span>来源平台：</span><span class="span_on" title="南通市电子交易平台">南通市电子交易平台</span><span>业务类型：</span><span class="span_on">工程建设</span><span>信息类型：</span><span class="span_on">招标/资审公告</span><span>行业：</span><span class="span_on">房屋建筑业</span></p></div></div><div class="publicont"><div><h4><a href="/information/deal/html/a/320000/0104/20260317/003236df57b2032f467c930965615c698349.html" title="R24007地块建设项目精装修施工中标结果公告" target="_blank"><span class="p_tit"></span>R<span class="p_tit"></span>2<span class="p_tit"></span>4<span class="p_tit"></span>0<span class="p_tit"></span>0<span class="p_tit"></span>7<span class="p_tit"></span>地<span class="p_tit"></span>块<span class="p_tit"></span>建<span class="p_tit"></span>设<span class="p_tit"></span>项<span class="p_tit"></span>目<span class="p_tit"></span>精<span class="p_tit"></span>装<span class="p_tit"></span>修<span class="p_tit"></span>施<span class="p_tit"></span>工<span class="p_tit"></span>中<span class="p_tit"></span>标<span class="p_tit"></span>结<span class="p_tit"></span>果<span class="p_tit"></span>公<span class="p_tit"></span>告<span class="p_tit"></span></a><span class="span_o">2026-03-17</span></h4><p class="p_tw"><span>省份：</span><span class="span_on">江苏省</span><span>来源平台：</span><span class="span_on" title="南通市电子交易平台">南通市电子交易平台</span><span>业务类型：</span><span class="span_on">工程建设</span><span>信息类型：</span><span class="span_on">交易结果公示</span><span>行业：</span><span class="span_on"></span></p></div></div><div class="publicont"><div><h4><a href="/information/deal/html/a/320000/0104/20260317/00329075d58b7ae14f6886d83d4159420f4a.html" title="巴城镇城北西路南侧、南白塔港西侧农民动迁房市政后配套项目" target="_blank"><span class="p_tit"></span>巴<span class="p_tit"></span>城<span class="p_tit"></span>镇<span class="p_tit"></span>城<span class="p_tit"></span>北<span class="p_tit"></span>西<span class="p_tit"></span>路<span class="p_tit"></span>南<span class="p_tit"></span>侧<span class="p_tit"></span>、<span class="p_tit"></span>南<span class="p_tit"></span>白<span class="p_tit"></span>塔<span class="p_tit"></span>港<span class="p_tit"></span>西<span class="p_tit"></span>侧<span class="p_tit"></span>农<span class="p_tit"></span>民<span class="p_tit"></span>动<span class="p_tit"></span>迁<span class="p_tit"></span>房<span class="p_tit"></span>市<span class="p_tit"></span>政<span class="p_tit"></span>后<span class="p_tit"></span>配<span class="p_tit"></span>套<span class="p_tit"></span>项<span class="p_tit"></span>目<span class="p_tit"></span></a><span class="span_o">2026-03-17</span></h4><p class="p_tw"><span>省份：</span><span class="span_on">江苏省</span><span>来源平台：</span><span class="span_on" title="昆山市网上招投标系统">昆山市网上招投标系统</span><span>业务类型：</span><span class="span_on">工程建设</span><span>信息类型：</span><span class="span_on">交易结果公示</span><span>行业：</span><span class="span_on">房屋建筑业</span></p></div></div><div class="publicont"><div><h4><a href="/information/deal/html/a/110000/0101/20260317/0011898b52d1a93c4b3e8589ae34ef51428b.html" title="丰台区河西地区雨污分流改造工程(一期)监理(1#标段)(监理)招标公告" target="_blank"><span class="p_tit"></span>丰<span class="p_tit"></span>台<span class="p_tit"></span>区<span class="p_tit"></span>河<span class="p_tit"></span>西<span class="p_tit"></span>地<span class="p_tit"></span>区<span class="p_tit"></span>雨<span class="p_tit"></span>污<span class="p_tit"></span>分<span class="p_tit"></span>流<span class="p_tit"></span>改<span class="p_tit"></span>造<span class="p_tit"></span>工<span class="p_tit"></span>程<span class="p_tit"></span>(<span class="p_tit"></span>一<span class="p_tit"></span>期<span class="p_tit"></span>)<span class="p_tit"></span>监<span class="p_tit"></span>理<span class="p_tit"></span>(<span class="p_tit"></span>1<span class="p_tit"></span>#<span class="p_tit"></span>标<span class="p_tit"></span>段<span class="p_tit"></span>)<span class="p_tit"></span>(<span class="p_tit"></span>监<span class="p_tit"></span>理<span class="p_tit"></span>)<span class="p_tit"></span>招<span class="p_tit"></span>标<span class="p_tit"></span>公<span class="p_tit"></span>告<span class="p_tit"></span></a><span class="span_o">2026-03-17</span></h4><p class="p_tw"><span>省份：</span><span class="span_on">北京</span><span>来源平台：</span><span class="span_on" title="北京市公共资源综合交易系统-水务">北京市公共资源综合交易系统-水务</span><span>业务类型：</span><span class="span_on">工程建设</span><span>信息类型：</span><span class="span_on">招标/资审公告</span><span>行业：</span><span class="span_on"></span></p></div></div><div class="publicont"><div><h4><a href="/information/deal/html/a/110000/0101/20260317/00110c324ac1381d4185b2d335ad37b69e37.html" title="丰台区河西地区雨污分流改造工程(一期)监理(2#标段)(监理)招标公告" target="_blank"><span class="p_tit"></span>丰<span class="p_tit"></span>台<span class="p_tit"></span>区<span class="p_tit"></span>河<span class="p_tit"></span>西<span class="p_tit"></span>地<span class="p_tit"></span>区<span class="p_tit"></span>雨<span class="p_tit"></span>污<span class="p_tit"></span>分<span class="p_tit"></span>流<span class="p_tit"></span>改<span class="p_tit"></span>造<span class="p_tit"></span>工<span class="p_tit"></span>程<span class="p_tit"></span>(<span class="p_tit"></span>一<span class="p_tit"></span>期<span class="p_tit"></span>)<span class="p_tit"></span>监<span class="p_tit"></span>理<span class="p_tit"></span>(<span class="p_tit"></span>2<span class="p_tit"></span>#<span class="p_tit"></span>标<span class="p_tit"></span>段<span class="p_tit"></span>)<span class="p_tit"></span>(<span class="p_tit"></span>监<span class="p_tit"></span>理<span class="p_tit"></span>)<span class="p_tit"></span>招<span class="p_tit"></span>标<span class="p_tit"></span>公<span class="p_tit"></span>告<span class="p_tit"></span></a><span class="span_o">2026-03-17</span></h4><p class="p_tw"><span>省份：</span><span class="span_on">北京</span><span>来源平台：</span><span class="span_on" title="北京市公共资源综合交易系统-水务">北京市公共资源综合交易系统-水务</span><span>业务类型：</span><span class="span_on">工程建设</span><span>信息类型：</span><span class="span_on">招标/资审公告</span><span>行业：</span><span class="span_on"></span></p></div></div><div class="publicont"><div><h4><a href="/information/deal/html/a/540000/0201/20260317/0054c38d0d103171430e9bfed45cf6335e3e.html" title="洛扎县农村供水自来水厂及集中供水处理设备运维维修项目采购公告" target="_blank"><span class="p_tit"></span>洛<span class="p_tit"></span>扎<span class="p_tit"></span>县<span class="p_tit"></span>农<span class="p_tit"></span>村<span class="p_tit"></span>供<span class="p_tit"></span>水<span class="p_tit"></span>自<span class="p_tit"></span>来<span class="p_tit"></span>水<span class="p_tit"></span>厂<span class="p_tit"></span>及<span class="p_tit"></span>集<span class="p_tit"></span>中<span class="p_tit"></span>供<span class="p_tit"></span>水<span class="p_tit"></span>处<span class="p_tit"></span>理<span class="p_tit"></span>设<span class="p_tit"></span>备<span class="p_tit"></span>运<span class="p_tit"></span>维<span class="p_tit"></span>维<span class="p_tit"></span>修<span class="p_tit"></span>项<span class="p_tit"></span>目<span class="p_tit"></span>采<span class="p_tit"></span>购<span class="p_tit"></span>公<span class="p_tit"></span>告<span class="p_tit"></span></a><span class="span_o">2026-03-17</span></h4><p class="p_tw"><span>省份：</span><span class="span_on">西藏自治区</span><span>来源平台：</span><span class="span_on" title="null"></span><span>业务类型：</span><span class="span_on">政府采购</span><span>信息类型：</span><span class="span_on">采购/资审公告</span></p></div></div><div class="publicont"><div><h4><a href="/information/deal/html/a/610000/0101/20260317/0061d3b10f2181b546ef92bcbaed0893867c.html" title="咸阳经济技术开发区秦创原临空智造园项目B7、C5厂房装修工程" target="_blank"><span class="p_tit"></span>咸<span class="p_tit"></span>阳<span class="p_tit"></span>经<span class="p_tit"></span>济<span class="p_tit"></span>技<span class="p_tit"></span>术<span class="p_tit"></span>开<span class="p_tit"></span>发<span class="p_tit"></span>区<span class="p_tit"></span>秦<span class="p_tit"></span>创<span class="p_tit"></span>原<span class="p_tit"></span>临<span class="p_tit"></span>空<span class="p_tit"></span>智<span class="p_tit"></span>造<span class="p_tit"></span>园<span class="p_tit"></span>项<span class="p_tit"></span>目<span class="p_tit"></span>B<span class="p_tit"></span>7<span class="p_tit"></span>、<span class="p_tit"></span>C<span class="p_tit"></span>5<span class="p_tit"></span>厂<span class="p_tit"></span>房<span class="p_tit"></span>装<span class="p_tit"></span>修<span class="p_tit"></span>工<span class="p_tit"></span>程<span class="p_tit"></span></a><span class="span_o">2026-03-17</span></h4><p class="p_tw"><span>省份：</span><span class="span_on">陕西省</span><span>来源平台：</span><span class="span_on" title="全国公共资源交易平台（陕西省·咸阳市）电子交易系统">全国公共资源交易平台（陕西省·咸阳市）电...</span><span>业务类型：</span><span class="span_on">工程建设</span><span>信息类型：</span><span class="span_on">招标/资审公告</span><span>行业：</span><span class="span_on">房屋建筑业</span></p></div></div><div class="publicont"><div><h4><a href="/information/deal/html/a/610000/0101/20260317/00619796ba38f3144b06b3292528fd9de638.html" title="臻境悦府项目正式供电工程" target="_blank"><span class="p_tit"></span>臻<span class="p_tit"></span>境<span class="p_tit"></span>悦<span class="p_tit"></span>府<span class="p_tit"></span>项<span class="p_tit"></span>目<span class="p_tit"></span>正<span class="p_tit"></span>式<span class="p_tit"></span>供<span class="p_tit"></span>电<span class="p_tit"></span>工<span class="p_tit"></span>程<span class="p_tit"></span></a><span class="span_o">2026-03-17</span></h4><p class="p_tw"><span>省份：</span><span class="span_on">陕西省</span><span>来源平台：</span><span class="span_on" title="全国公共资源交易平台（陕西省）">全国公共资源交易平台（陕西省）</span><span>业务类型：</span><span class="span_on">工程建设</span><span>信息类型：</span><span class="span_on">招标/资审公告</span><span>行业：</span><span class="span_on">房屋建筑业</span></p></div></div><div class="publicont"><div><h4><a href="/information/deal/html/a/500000/0105/20260317/005066a3eafb939d4157a18be92e43eba356.html" title="50000120260311001060101的招标文件" target="_blank"><span class="p_tit"></span>5<span class="p_tit"></span>0<span class="p_tit"></span>0<span class="p_tit"></span>0<span class="p_tit"></span>0<span class="p_tit"></span>1<span class="p_tit"></span>2<span class="p_tit"></span>0<span class="p_tit"></span>2<span class="p_tit"></span>6<span class="p_tit"></span>0<span class="p_tit"></span>3<span class="p_tit"></span>1<span class="p_tit"></span>1<span class="p_tit"></span>0<span class="p_tit"></span>0<span class="p_tit"></span>1<span class="p_tit"></span>0<span class="p_tit"></span>6<span class="p_tit"></span>0<span class="p_tit"></span>1<span class="p_tit"></span>0<span class="p_tit"></span>1<span class="p_tit"></span>的<span class="p_tit"></span>招<span class="p_tit"></span>标<span class="p_tit"></span>文<span class="p_tit"></span>件<span class="p_tit"></span></a><span class="span_o">2026-03-17</span></h4><p class="p_tw"><span>省份：</span><span class="span_on">重庆市</span><span>来源平台：</span><span class="span_on" title="null"></span><span>业务类型：</span><span class="span_on">工程建设</span><span>信息类型：</span><span class="span_on">招标/资审文件澄清</span><span>行业：</span><span class="span_on">电力、热力生产和供应业</span></p></div></div><div class="publicont"><div><h4><a href="/information/deal/html/a/320000/0102/20260317/0032a4060910b8bf4215b4db66a231fb3808.html" title="海安市墩头镇中心幼儿园幼儿活动楼新建工程项目施工总承包-开标记录" target="_blank"><span class="p_tit"></span>海<span class="p_tit"></span>安<span class="p_tit"></span>市<span class="p_tit"></span>墩<span class="p_tit"></span>头<span class="p_tit"></span>镇<span class="p_tit"></span>中<span class="p_tit"></span>心<span class="p_tit"></span>幼<span class="p_tit"></span>儿<span class="p_tit"></span>园<span class="p_tit"></span>幼<span class="p_tit"></span>儿<span class="p_tit"></span>活<span class="p_tit"></span>动<span class="p_tit"></span>楼<span class="p_tit"></span>新<span class="p_tit"></span>建<span class="p_tit"></span>工<span class="p_tit"></span>程<span class="p_tit"></span>项<span class="p_tit"></span>目<span class="p_tit"></span>施<span class="p_tit"></span>工<span class="p_tit"></span>总<span class="p_tit"></span>承<span class="p_tit"></span>包<span class="p_tit"></span>-<span class="p_tit"></span>开<span class="p_tit"></span>标<span class="p_tit"></span>记<span class="p_tit"></span>录<span class="p_tit"></span></a><span class="span_o">2026-03-17</span></h4><p class="p_tw"><span>省份：</span><span class="span_on">江苏省</span><span>来源平台：</span><span class="span_on" title="南通市电子交易平台">南通市电子交易平台</span><span>业务类型：</span><span class="span_on">工程建设</span><span>信息类型：</span><span class="span_on">开标记录</span><span>行业：</span><span class="span_on">房屋建筑业</span></p></div></div><div class="publicont"><div><h4><a href="/information/deal/html/a/510000/0104/20260317/00518d90f9d227a942aeb86af8d9178e94d5.html" title="九寨度假村建设项目第1标段" target="_blank"><span class="p_tit"></span>九<span class="p_tit"></span>寨<span class="p_tit"></span>度<span class="p_tit"></span>假<span class="p_tit"></span>村<span class="p_tit"></span>建<span class="p_tit"></span>设<span class="p_tit"></span>项<span class="p_tit"></span>目<span class="p_tit"></span>第<span class="p_tit"></span>1<span class="p_tit"></span>标<span class="p_tit"></span>段<span class="p_tit"></span></a><span class="span_o">2026-03-17</span></h4><p class="p_tw"><span>省份：</span><span class="span_on">四川省</span><span>来源平台：</span><span class="span_on" title="null"></span><span>业务类型：</span><span class="span_on">工程建设</span><span>信息类型：</span><span class="span_on">交易结果公示</span><span>行业：</span><span class="span_on">房屋建筑业</span></p></div></div><div class="publicont"><div><h4><a href="/information/deal/html/a/320000/0104/20260317/00328dd66548900d4a0195e2e5cfccfbd4be.html" title="BYFFJSZ20251100020010022024JY22地块房地产开发项目监理标段-中标结果公告" target="_blank"><span class="p_tit"></span>B<span class="p_tit"></span>Y<span class="p_tit"></span>F<span class="p_tit"></span>F<span class="p_tit"></span>J<span class="p_tit"></span>S<span class="p_tit"></span>Z<span class="p_tit"></span>2<span class="p_tit"></span>0<span class="p_tit"></span>2<span class="p_tit"></span>5<span class="p_tit"></span>1<span class="p_tit"></span>1<span class="p_tit"></span>0<span class="p_tit"></span>0<span class="p_tit"></span>0<span class="p_tit"></span>2<span class="p_tit"></span>0<span class="p_tit"></span>0<span class="p_tit"></span>1<span class="p_tit"></span>0<span class="p_tit"></span>0<span class="p_tit"></span>2<span class="p_tit"></span>2<span class="p_tit"></span>0<span class="p_tit"></span>2<span class="p_tit"></span>4<span class="p_tit"></span>J<span class="p_tit"></span>Y<span class="p_tit"></span>2<span class="p_tit"></span>2<span class="p_tit"></span>地<span class="p_tit"></span>块<span class="p_tit"></span>房<span class="p_tit"></span>地<span class="p_tit"></span>产<span class="p_tit"></span>开<span class="p_tit"></span>发<span class="p_tit"></span>项<span class="p_tit"></span>目<span class="p_tit"></span>监<span class="p_tit"></span>理<span class="p_tit"></span>标<span class="p_tit"></span>段<span class="p_tit"></span>-<span class="p_tit"></span>中<span class="p_tit"></span>标<span class="p_tit"></span>结<span class="p_tit"></span>果<span class="p_tit"></span>公<span class="p_tit"></span>告<span class="p_tit"></span></a><span class="span_o">2026-03-17</span></h4><p class="p_tw"><span>省份：</span><span class="span_on">江苏省</span><span>来源平台：</span><span class="span_on" title="null"></span><span>业务类型：</span><span class="span_on">工程建设</span><span>信息类型：</span><span class="span_on">交易结果公示</span><span>行业：</span><span class="span_on"></span></p></div></div><div class="publicont"><div><h4><a href="/information/deal/html/a/330000/0203/20260317/003346ed9dd8b0494c7aa507db162810f636.html" title="德清县体育中心（县少年儿童体育学校）的少体校学生就学、训练、参赛等用车服务采购项目合同" target="_blank"><span class="p_tit"></span>德<span class="p_tit"></span>清<span class="p_tit"></span>县<span class="p_tit"></span>体<span class="p_tit"></span>育<span class="p_tit"></span>中<span class="p_tit"></span>心<span class="p_tit"></span>（<span class="p_tit"></span>县<span class="p_tit"></span>少<span class="p_tit"></span>年<span class="p_tit"></span>儿<span class="p_tit"></span>童<span class="p_tit"></span>体<span class="p_tit"></span>育<span class="p_tit"></span>学<span class="p_tit"></span>校<span class="p_tit"></span>）<span class="p_tit"></span>的<span class="p_tit"></span>少<span class="p_tit"></span>体<span class="p_tit"></span>校<span class="p_tit"></span>学<span class="p_tit"></span>生<span class="p_tit"></span>就<span class="p_tit"></span>学<span class="p_tit"></span>、<span class="p_tit"></span>训<span class="p_tit"></span>练<span class="p_tit"></span>、<span class="p_tit"></span>参<span class="p_tit"></span>赛<span class="p_tit"></span>等<span class="p_tit"></span>用<span class="p_tit"></span>车<span class="p_tit"></span>服<span class="p_tit"></span>务<span class="p_tit"></span>采<span class="p_tit"></span>购<span class="p_tit"></span>项<span class="p_tit"></span>目<span class="p_tit"></span>合<span class="p_tit"></span>同<span class="p_tit"></span></a><span class="span_o">2026-03-17</span></h4><p class="p_tw"><span>省份：</span><span class="span_on">浙江省</span><span>来源平台：</span><span class="span_on" title="湖州市公共资源交易网">湖州市公共资源交易网</span><span>业务类型：</span><span class="span_on">政府采购</span><span>信息类型：</span><span class="span_on">采购合同</span></p></div></div><div class="publicont"><div><h4><a href="/information/deal/html/a/320000/0102/20260317/003279c62ac0622a4a5fb8c50731c24aa381.html" title="数智中心装修及厂区绿化工程开标记录" target="_blank"><span class="p_tit"></span>数<span class="p_tit"></span>智<span class="p_tit"></span>中<span class="p_tit"></span>心<span class="p_tit"></span>装<span class="p_tit"></span>修<span class="p_tit"></span>及<span class="p_tit"></span>厂<span class="p_tit"></span>区<span class="p_tit"></span>绿<span class="p_tit"></span>化<span class="p_tit"></span>工<span class="p_tit"></span>程<span class="p_tit"></span>开<span class="p_tit"></span>标<span class="p_tit"></span>记<span class="p_tit"></span>录<span class="p_tit"></span></a><span class="span_o">2026-03-17</span></h4><p class="p_tw"><span>省份：</span><span class="span_on">江苏省</span><span>来源平台：</span><span class="span_on" title="淮安市公共资源交易系统">淮安市公共资源交易系统</span><span>业务类型：</span><span class="span_on">工程建设</span><span>信息类型：</span><span class="span_on">开标记录</span><span>行业：</span><span class="span_on">房屋建筑业</span></p></div></div></div>
+
+  <div class="paging" id="paging"><span class="count">共 23621 条</span><a class="a_righta">上一页</a><a href="javascript:getList(1)" class="a_hover">1</a><a href="javascript:getList(2)">2</a><a href="javascript:getList(3)">3</a><a href="javascript:getList(4)">4</a><a href="javascript:getList(5)">5</a><a href="javascript:getList(6)">6</a><span class="spot">...</span><a href="javascript:getList(1182)">1182</a><a href="javascript:getList(2)" class="a_righta">下一页</a><span class="count">共 1182 页</span><span class="skip">到第<input type="text" id="gotopage" value="1" style="">页<button type="button" class="btn" onclick="gotoPage(1182,'javascript:getList')">跳转</button></span></div>
+</div>
+<div class="foot">
+  <ul>
+    <li><a href="/home/webmap.html" target="_blank">网站地图</a><span>|</span></li>
+    <li><a href="/home/webStated.html" target="_blank">网站声明</a><span>|</span></li>
+    <li><a href="javascript:;" onclick="addFavorite();">添加收藏</a><span>|</span></li>
+    <li><a href="/home/contact.html" target="_blank">联系我们</a></li>
+  </ul>
+</div>
+<div class="footer">
+  <div class="footer_page" style="width:990px;">
+    <div style="float:left;margin-top:5px !important;">
+      <img onclick="linkto_jiucuo('bm04000008')" style="margin:0;border:0;cursor: pointer;" src="/assets/images/jiucuo.png">
+    </div>
+    <div style="float:left;width:85px;height:85px;margin-top:-5px !important;">
+      <a href="https://bszs.conac.cn/sitename?method=show&amp;id=59FE0779EB534910E053022E1AAC7D54" target="_blank">
+        <img id="imgConac" vspace="0" hspace="0" border="0" src="/assets/images/imgConac.png" data-bd-imgshare-binded="1">
+      </a>
+    </div>
+    <div style="float:left;margin-left:20px;">
+      <p>主办：国家信息中心&nbsp;&nbsp;&nbsp;&nbsp;指导单位： 国家发展和改革委员会 </p>
+      <p>网站标识码：bm04000008&nbsp;&nbsp;<a href="https://beian.miit.gov.cn/" target="_blank" style="color:#000">京ICP备05052393号-9</a>&nbsp;&nbsp;
+        <!--<img src="/assets/images/guobiao.png" width="14" height="14">-->
+        京公网安备11010202007733号 </p>
+      <p>地址：北京西城区三里河路58号&nbsp;&nbsp;&nbsp;&nbsp;邮政编码：100045</p>
+    </div>
+  </div>
+</div>
+<script type="text/javascript">
+    function linkto_jiucuo(site_code) {
+        //获取该站点需要纠错页面的url地址
+        var url = "";
+        if (parent !== window) {
+            try {
+                url = window.top.location.href;
+            } catch (e) {
+                url = window.top.document.referrer;
+            }
+        }
+        if (url.length == 0)
+            url = document.location.href;
+        //跳转至纠错系统填写页面
+        window.open("http://121.43.68.40/exposure/jiucuo.html?site_code=" + site_code + "&url=" + encodeURIComponent(url));
+    }
+
+    function addFavorite() {
+        var url = window.location;
+        var title = document.title;
+        var ua = navigator.userAgent.toLowerCase();
+        if (ua.indexOf("360se") > -1) {
+            alert("由于360浏览器功能限制，请按 Ctrl+D 手动收藏！");
+        } else if (ua.indexOf("msie 8") > -1) {
+            window.external.AddToFavoritesBar(url, title); //IE8
+        } else if (document.all) {
+            try {
+                window.external.addFavorite(url, title);
+            } catch (e) {
+                alert("您的浏览器不支持,请按 Ctrl+D 手动收藏!");
+            }
+        } else if (window.sidebar) {
+            window.sidebar.addPanel(title, url, "");
+        } else {
+            alert("您的浏览器不支持,请按 Ctrl+D 手动收藏!");
+        }
+    }
+</script>
+<div id="filter" class="filter" style="top: 285px; width: 1280px; display: none;">
+  <span>数据正在搜索中...</span>
+</div>
+
+
+</body></html>

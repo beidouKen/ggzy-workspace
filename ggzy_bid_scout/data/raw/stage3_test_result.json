@@ -1,0 +1,20 @@
+{
+  "stats": {
+    "keyword": "体育",
+    "pages_fetched": 5,
+    "total_available": 1598,
+    "items_processed": 100,
+    "success": 100,
+    "fail": 0,
+    "duplicates_removed": 0,
+    "total_stored": 100,
+    "success_rate": 100.0
+  },
+  "output_info": {
+    "exists": true,
+    "total": 100,
+    "has_meta": true,
+    "dup_in_file": 0
+  },
+  "pass": true
+}
